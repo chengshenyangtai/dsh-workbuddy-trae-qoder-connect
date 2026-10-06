@@ -14,12 +14,9 @@
 
 | 渠道 | 登录方式 | 你要做的 |
 |---|---|---|
-| **WorkBuddy** | 扫码授权（腾讯登录页） | 面板 → 认证 → 点「扫码」→ 点弹窗里的链接（系统浏览器打开）→ 手机扫码/短信登录 → 凭据自动写入 |
+| **WorkBuddy** | 扫码授权（腾讯登录页） | 面板点「扫码」复制链接，**或让 AI 跑登录脚本**（见下）→ 任意浏览器打开链接 → 手机扫码/短信登录 → 凭据自动写入 |
 | **Qoder** | 官方 PAT | 到 <https://qoder.com.cn/account/integrations> 生成 PAT（`pt-…`），存为 `$DSH_HOME/qoder/pat`（0600）或设环境变量 `QODERCN_PAT` |
 | **Trae** | 本机凭据导出 | 装 Trae 桌面版并登录一次 → 宿主跑 `node scripts/export-trae-plain.mjs`（解密本机 Trae 的凭据与模型目录到 `~/.dsh/trae/`） |
-
-> WorkBuddy 扫码：弹窗里的链接是腾讯官方登录页（页面自带二维码，也支持手机号+短信）。
-> 点链接会用系统浏览器打开；复制失败时手动选中链接复制即可。授权完成后凭据自动写入，弹窗保持打开即可。
 
 ### AI 快速启动整个流程
 
@@ -34,9 +31,12 @@ node scripts/export-trae-plain.mjs
 #    New-Item -ItemType Directory -Force "$env:USERPROFILE\.dsh\qoder" | Out-Null
 #    Set-Content "$env:USERPROFILE\.dsh\qoder\pat" "pt-xxxx" -Encoding ascii
 
-# 3) WorkBuddy：没有可脚本化的登录——告诉用户在面板点「扫码」，
-#    打开弹窗里的链接扫码即可；你也可以用 status 路由确认登录态：
-#    curl http://127.0.0.1:<DSH_PORT>/plugins/dsh-workbuddy-connect/status
+# 3) WorkBuddy：导出扫码链接交给用户（推荐——不依赖 GUI 弹窗）
+#    只拿链接：
+node scripts/workbuddy-login.mjs workbuddy1 --url-only
+#    把输出的链接贴进对话发给用户，用户在手机或电脑浏览器打开、扫码/短信
+#    登录后，凭据由插件自动写入。也可以让 AI 全程盯着（轮询到登录成功）：
+node scripts/workbuddy-login.mjs workbuddy1
 
 # 4) 核对三渠道状态（一个请求扇出全部渠道）
 #    GET http://127.0.0.1:<DSH_PORT>/plugins/dsh-connect/status
@@ -45,7 +45,10 @@ node scripts/export-trae-plain.mjs
 #    或在面板渠道页点「一键签到」。
 ```
 
-重启 DSH 后所有渠道生效；面板的渠道页能看每家的登录状态、剩余额度。
+> 面板里的扫码弹窗是同一流程的可视化版本，链接以纯文本展示（复制到浏览器打开）。
+> ⚠️ DSH 桌面宿主里**点击面板内的外部链接会把面板顶掉**——这是宿主行为，所以链接
+> 只能复制后打开，别直接点。
+> 重启 DSH 后所有渠道生效；面板的渠道页能看每家的登录状态、剩余额度。
 
 ## 思考强度：来源与边界
 
