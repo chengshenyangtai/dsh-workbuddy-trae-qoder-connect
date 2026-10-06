@@ -1,0 +1,16 @@
+# 凭据与本地数据 —— 绝不入库
+.env
+*.env
+!.env.example
+credential.json
+credential*.json
+*.qoder-probe.json
+models.json
+trae/
+connect-auth/
+
+# 依赖与产物
+node_modules/
+*.log
+*.patch
+dist/
