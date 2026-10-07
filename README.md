@@ -130,14 +130,19 @@ node scripts/export-trae-plain.mjs --list       # 看两个产品各自的登录
 ## 验证
 
 ```bash
-# 6 个确定性脚本，149 项断言，不依赖网络：
+# 9 个确定性脚本，174 项断言（宿主 profile 在场时 +1），不依赖网络：
 node probes/verify-qoder-effort-source.mjs   # 档位来源（21）
 node probes/verify-trae-effort-chain.mjs     # Trae 档位链路（22）
 node probes/verify-probe-service.mjs         # 探查服务（25）
 node probes/verify-probe-contract.mjs        # 探查契约（17）
 node probes/qoder-effort-passthrough.mjs     # 请求透传（24）
 node probes/verify-trae-products.mjs         # Trae 双产品变体（40）
+node probes/verify-attachment-wiring.mjs     # 三家 provider 的附件接线（9）
+node probes/verify-provider-config-schema.mjs # 配置 schema 契约：真模块可求值（7，--installed 时 8）
+node probes/verify-schemastery-field-shapes.mjs # 字段形状逐个对宿主真包核验（9）
 ```
+
+`verify-provider-config-schema.mjs` / `verify-schemastery-field-shapes.mjs` 是同一起事故的回归探针：某次给 Trae 配置加「产品线」字段时写成 `z.enum(["cn","solo"])`，而宿主的 `@deepseek-ai/schemastery` 没有 `z.enum`（可选值要用 `z.union([z.const(...), ...])` 表达），于是 provider 模块在**求值阶段**抛 TypeError，整个 bundle 连 WorkBuddy / Qoder 一起加载失败，表现为「重启后一个渠道都不显示」。教训：**对宿主契约 API 的断言必须拿真包跑**，沙箱把 peer 依赖 stub 掉时，这类错误恰好会被 stub 吞掉。两个探针都做过反向验证（把 `z.enum` 塞回源码，必须变红）。
 
 `verify-trae-products.mjs` 里依赖真实快照的那一组（`~/.dsh/trae-cn/models.json` 等）在**没装 Trae 的机器上自动跳过**并注明原因，所以它在任何机器上都该是绿的。加 `--installed` 可以改测已安装的那份，用于确认「装上的代码 = 仓库里的代码」。
 
