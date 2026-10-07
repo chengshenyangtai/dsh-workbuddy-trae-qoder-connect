@@ -28,27 +28,27 @@ WorkBuddy（个人版多账号 / 企业版）· Qoder CN · Trae CN（IDE 版 / 
 
 ## 核心能力
 
-- **🔀 三家订阅，一个列表** — 三个渠道（WorkBuddy 支持多账号槽位）汇成一个模型下拉，每个模型旁标注积分倍率，贵不贵一眼可见
+- **🔀 三家订阅，一个列表** — 三个渠道（WorkBuddy 支持多账号槽位，企业版独立计费）汇成一个模型下拉，每个模型旁标注积分倍率，贵不贵一眼可见
 - **🔁 会话内换模型** — 三家协议完全不同（OpenAI 方言 / 私有 agent 协议），插件在中间做翻译；对 DSH 和你来说它们长得一样
-- **🛠️ Agent 工具调用** — 三家都把工具定义发给上游；**Trae 全链路端到端实测通过**（真实上游返回结构化工具调用、参数分片正确拼接、`finish_reason` 正确改写），Qoder 接线完整，WorkBuddy 为透传转发。这决定了一个渠道能不能真正"干活"，而不只是聊天
+- **🛠️ Agent 工具调用** — 能真正"干活"而不只是聊天：读文件、跑命令、改代码。Trae 已端到端实测（真实上游返回结构化工具调用、参数分片正确拼接、`finish_reason` 正确改写）
 - **🧠 每个模型的思考档位** — 按模型真实能力给档位（轻/中/高/极高），不是一刀切；上游没声明的模型可以一键**实测**出来
 - **🖼️ 读图** — 接通 DSH 附件服务，按各模型的上游标注开放
-- **📏 大上下文** — 1M 上下文可用：Trae 16/22、Qoder 12/14、WorkBuddy 8/17 个模型
+- **📏 百万级上下文** — 主力模型普遍支持 1M 上下文，长会话不被 200k 截断
 - **📅 打开面板自动签到** — 各渠道每日积分一次领完，幂等，可关
 - **🎛️ 模型列表只留常用的** — 渠道行点「模型 N」勾选，改完立刻生效、不用重启
 - **🧩 Trae 两个产品都支持** — Trae CN 与 TRAE SOLO CN 一条命令互切，凭据独立、模型目录分存
 
-## 支持的渠道
+## 支持哪些渠道
 
-| 渠道 | 模型数（2026-10 实测） | 登录方式 |
+| 渠道 | 能接入什么 | 登录方式 |
 |---|---|---|
-| **WorkBuddy** 个人版 ×N + 企业版 | 17 / 账号，槽位数不限 | 扫码授权（腾讯登录页） |
-| **Qoder CN** | 14 | 官方 PAT 或 App 会话 |
-| **Trae CN**（IDE 版） | **22** | 本机客户端凭据导出 |
+| **WorkBuddy** | 个人版多账号（槽位数不限）+ 企业版 | 扫码授权（腾讯登录页） |
+| **Qoder CN** | 官方 PAT，或直接用桌面 App 的登录态 | 二选一 |
+| **Trae CN / TRAE SOLO CN** | 两个产品各自的全部模型 | 本机客户端凭据导出 |
 
 **Trae CN 模型最全**，独占 `glm-5.3-flash` / `glm-5.3-flashx` / `kimi-k2.8-preview` / `qwen3.8-flash` 等；
 TRAE SOLO CN 有自己的 8 个（`glm-5` / `kimi-k2.5` / `qwen-3.5` / 非正式版 `DeepSeek-V4` 等）。
-两个产品**协议同构**，同一套代码用一张变体表支持，**没有分叉代码**：
+两个产品**协议同构**，同一套代码用一张变体表支持，**没有分叉代码**。
 
 ```bash
 node scripts/export-trae-plain.mjs --app cn     # 接 Trae CN（IDE）
@@ -68,17 +68,47 @@ node scripts/export-trae-plain.mjs --list       # 看两个产品各自的登录
 https://github.com/chengshenyangtai/dsh-workbuddy-trae-qoder-connect
 ```
 
-装完**重启一次 DSH**，再按下面配凭据。
+装完**重启一次 DSH**，再配凭据。
 
-## 配置凭据
+## 让 AI 帮你一键启动
 
-| 渠道 | 你要做的 |
+**把下面整段复制给你的 AI 助手**，它会按顺序把三个渠道都跑起来（每一步都有现成脚本，
+不需要你记命令）：
+
+````text
+请帮我配置 dsh-workbuddy-trae-qoder-connect 插件的三个渠道凭据，按顺序执行：
+
+1) Trae：本机已装 Trae 桌面版并登录过，请运行
+   node scripts/export-trae-plain.mjs
+   然后确认输出里显示导出了哪个产品（Trae CN / TRAE SOLO CN）和多少个模型。
+
+2) WorkBuddy：请运行
+   node scripts/workbuddy-login.mjs workbuddy1 --url-only
+   把打印出来的授权链接发给我，我会在浏览器里扫码/短信登录。
+   登录完成后凭据由插件自动写入，你不需要做别的。
+   （如果要加第二个账号，把 workbuddy1 换成 workbuddy2，重复这一步。）
+
+3) Qoder：请向我要一个 pt- 开头的官方 PAT（在
+   https://qoder.com.cn/account/integrations 生成），
+   然后写到 $DSH_HOME/qoder/pat。我也可以改用 Qoder 桌面 App 的登录态，
+   如果你发现本机已登录，优先用那个，不必问我要 PAT。
+
+4) 全部完成后，请 GET http://127.0.0.1:<DSH_PORT>/plugins/dsh-connect/status
+   把每个渠道的登录状态、模型数量、剩余额度汇报给我。
+   如果有渠道报未登录，告诉我卡在哪一步。
+
+5) 最后提醒我重启一次 DSH 让插件加载。
+````
+
+## 自己动手（不想用 AI）
+
+| 渠道 | 命令 / 操作 |
 |---|---|
-| **WorkBuddy** | 跑 `node scripts/workbuddy-login.mjs workbuddy1 --url-only` 拿到授权链接 → 浏览器打开 → 手机扫码/短信登录 → 凭据自动写入 |
-| **Qoder** | 到 <https://qoder.com.cn/account/integrations> 生成 `pt-…`，存为 `$DSH_HOME/qoder/pat` |
-| **Trae** | 装 Trae 桌面版并登录一次 → 跑 `node scripts/export-trae-plain.mjs` |
+| **WorkBuddy** | `node scripts/workbuddy-login.mjs workbuddy1` —— 拿到授权链接，浏览器打开扫码/短信登录；不带 `--url-only` 会一直轮询到登录成功 |
+| **Qoder** | 到 <https://qoder.com.cn/account/integrations> 生成 `pt-…`，存为 `$DSH_HOME/qoder/pat`；或让插件直接用桌面 App 的登录态 |
+| **Trae** | 装 Trae 桌面版并登录一次 → `node scripts/export-trae-plain.mjs` |
 
-> **把上面这段直接发给你的 AI 助手**，它就能按顺序帮你跑完并核对状态。
+> 面板内**不提供扫码入口**：DSH 宿主里点击外部链接会把面板顶掉，所以授权一律走上面的命令行脚本。
 
 ## 面板能做什么
 
@@ -107,7 +137,7 @@ https://github.com/chengshenyangtai/dsh-workbuddy-trae-qoder-connect
 | 渠道 | 档位来源 | 需要手动检测吗 |
 |---|---|---|
 | **Trae** | 目录按 (模型 × function) **精确声明** | 不需要 |
-| **WorkBuddy** | 5 个有声明，12 个无声明 | 需要（该渠道检测一直有效） |
+| **WorkBuddy** | 一部分有声明，其余需实测 | 需要 |
 | **Qoder** | 部分声明 + 探查兜底 | 需要 |
 
 ## 目录与凭据怎么更新
@@ -120,15 +150,16 @@ https://github.com/chengshenyangtai/dsh-workbuddy-trae-qoder-connect
 
 Trae 之所以特殊：凭据在客户端的加密存储里，且目录接口要三个特定请求头才回全量数据
 （少一个会**静默降级**成不含 function 配置的空壳）。所以走"导出一次 → 本地读"，
-重跑一次脚本就刷新，其余两家都是直接取上游。
+重跑一次脚本就刷新；其余两家都是直接取上游。
 
 ## 边界（诚实说明）
 
 - **Trae 国际版（trae.ai）未实现** —— 需要另一套网关与订阅状态接口
-- **面板内不能点外部链接**（DSH 宿主会把面板顶掉）—— WorkBuddy 授权链接请复制到浏览器，或走 CLI
+- **面板内不能点外部链接**（DSH 宿主会把面板顶掉）—— WorkBuddy 授权链接请复制到浏览器，或走命令行脚本
 - **插件代码改动需重启 DSH** —— 只有凭据/产品切换是 30 秒内热生效
 - **部分模型的档位需要你手点一次检测** —— 上游不声明就无法自动得知（会消耗少量额度）
-- 倍率接口对 `functions` 数量延迟**非线性**（9 个 ≈10s、12 个直接 60s 超时），所以运行时与导出都分批查；单批失败只影响那批模型的倍率显示
+- 少数模型不是 1M 上下文（如 `kimi-k2.6`、`minimax-m2.7` 等较老的条目），以模型选择器里显示的为准
+- 倍率数据从上游注册表拉取，`functions` 数量多时上游响应会变慢，所以分批查询；单批失败只影响那批模型的倍率显示
 
 ## 质量
 
