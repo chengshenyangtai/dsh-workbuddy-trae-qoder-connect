@@ -1,0 +1,25 @@
+# Notice / 致谢
+
+本仓库的许可证见 [LICENSE](LICENSE)（MIT）。
+
+## 上游项目
+
+本插件基于 **dsh-connect**（https://github.com/yembors64632/dsh-connect）（MIT，PR #3 基线），
+在其之上加入：
+
+- 桌面宿主（DSH Desktop / Windows）的适配与修复；
+- **Trae 双产品线支持**：Trae CN（IDE）与 TRAE SOLO CN（TraeWork）作为可切换的产品变体，
+  见 [docs/TRAE-CN-PRODUCTS.md](docs/TRAE-CN-PRODUCTS.md)；
+- WorkBuddy / Qoder / Trae 三渠道的**思考档位**（reasoning effort）声明与透传链路，
+  见 [docs/TRAE-REASONING-EFFORT.md](docs/TRAE-REASONING-EFFORT.md) 与 [docs/CATALOG.md](docs/CATALOG.md)。
+
+这些改动同样以 MIT 许可证发布。上游的版权声明保留在其仓库中，本仓库不主张对原始代码的独家权利。
+
+## 为什么要单独放一个 NOTICE 文件
+
+MIT 文本本身**不能添加任何条件**（那会让它不再是 MIT）。GitHub 的许可证检测器在
+`Copyright (c) …` 与 `Permission is hereby granted …` 之间遇到额外段落就会放弃判定
+（实测本仓库一度被识别为 `NOASSERTION`）。所以：
+
+- `LICENSE` = 纯 MIT 模板，一字不多，机器可识别；
+- 上游致谢放在这里，README 末尾也链到这里。

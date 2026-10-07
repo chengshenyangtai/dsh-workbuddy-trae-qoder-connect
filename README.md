@@ -175,5 +175,5 @@ GitHub/npm 上的同类大多是**单渠道**插件（只接 WorkBuddy，或只�
 ## 说明
 
 - 凭据与 token 由 `.gitignore` 排除，仓库不含账号数据
-- 基于 [yembors64632/dsh-connect](https://github.com/yembors64632/dsh-connect)（PR #3 基线），MIT 许可证
+- 基于 [yembors64632/dsh-connect](https://github.com/yembors64632/dsh-connect)（PR #3 基线），MIT 许可证；上游致谢详见 [NOTICE](NOTICE)（LICENSE 保持纯 MIT 模板，GitHub 才能识别出许可证）
 - 设计细节：[docs/CATALOG.md](docs/CATALOG.md)（目录字段与探查 SOP）· [docs/TRAE-REASONING-EFFORT.md](docs/TRAE-REASONING-EFFORT.md)（Trae 档位四条件实测）· [docs/TRAE-CN-PRODUCTS.md](docs/TRAE-CN-PRODUCTS.md)（Trae 双产品接入实测：变体表、function 矩阵、两个计费/乱码坑、倍率分批）
