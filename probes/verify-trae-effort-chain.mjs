@@ -44,7 +44,9 @@ check("映射表是唯一事实来源（正向声明也用它）", /Object\.entr
  * 该 bug 真实发生过（2026-10-06），在此钉死以防复发。
  */
 check("adapter 调用处传入了 settings（漏传会让渠道在选择器里消失）",
-  /createTraeAdapter\(\{ shim, catalog, settings,/.test(src), true);
+  // 允许多行实参：这个调用点为加 resolveAttachments 已展开成多行，只认单行写法
+  // 会把「一次代码格式化」变成假失败 —— 而漏传 settings 的后果是真的渠道消失。
+  /createTraeAdapter\(\{[\s\S]{0,400}?\bsettings\b/.test(src), true);
 
 console.log("\n【2】reasoningFieldsFor：按 function 产出档位");
 // 提取并等价执行。注意该函数现在依赖模块级常量 TRAE_EFFORT_TO_LEVEL，

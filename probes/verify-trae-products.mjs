@@ -47,6 +47,8 @@ fs.mkdirSync(SANDBOX, { recursive: true });
 // 沙箱根声明 ESM：原包靠 package.json 的 "type":"module"，拷出来必须自己补，
 // 否则 .js 被当 CommonJS，import 直接语法错。
 fs.writeFileSync(path.join(SANDBOX, 'package.json'), JSON.stringify({ name: 'trae-provider-sandbox', type: 'module', private: true }, null, 1));
+// 只拷 trae provider 与 shared/http.js：垫片 `withLegacyImageBudget` 已提到 shared，
+// 所以这里不再需要 providers/workbuddy/**（它会把 variants-CnrmSn0Q.js 一并拖进来）。
 for (const rel of ['lib/providers/trae/index.js', 'lib/shared/http.js']) {
   const dst = path.join(SANDBOX, rel);
   fs.mkdirSync(path.dirname(dst), { recursive: true });
