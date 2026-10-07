@@ -2,10 +2,6 @@ MIT License
 
 Copyright (c) 2026 dsh-connect-solo contributors
 
-Based on dsh-connect (https://github.com/yembors64632/dsh-connect),
-with desktop-host fixes and reasoning-effort support for
-WorkBuddy / Qoder / Trae channels.
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -23,3 +19,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Attribution notice (not part of the license text above):
+
+Based on dsh-connect (https://github.com/yembors64632/dsh-connect),
+with desktop-host fixes, multi-product Trae support, and reasoning-effort
+support for the WorkBuddy / Qoder / Trae channels.

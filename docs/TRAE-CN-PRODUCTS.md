@@ -63,6 +63,23 @@
 
 > **CN 的账号能打通 SOLO 的 function，反过来不行。** SOLO 的 `model_list_map` 里没有 CN 独占的 `glm-5.3-flash` / `glm-5.3-flashx` / `kimi-k2.8-preview` / `qwen3.8-flash`。这正是「CN 模型更全」的技术成因。
 
+## 3b. 「目录里没有」≠「上游不给调」——可调用性实测
+
+上面那句「SOLO 目录里没有 CN 独占模型」只说明**本地 IDE 的模型表**不列它们，不代表服务端拒绝调用。实测（付费账号，`probes/trae-cn-model-callability.mjs`，每条 `max_tokens: 16`）：
+
+| function | model | 结果 |
+|---|---|---|
+| `solo_agent`（CN） | `glm-5.3-flash` | ✅ 可用 |
+| `solo_agent`（CN） | `kimi-k2.8-preview` | ✅ 可用 |
+| `solo_agent`（CN） | `qwen3.8-flash` | ✅ 可用 |
+| `solo_agent`（CN） | `glm-5.3`（对照） | ✅ 可用 |
+| `solo_work_lite`（**SOLO 的名字**） | `glm-5.3-flash` | ✅ 可用 |
+| `chat_v3`（CN） | `glm-5.3-flash` | ✅ 可用 |
+
+所以「这几个模型能不能用」**主要由账号档位决定，而不是插件选的 function**：同类插件在免费账号上取证到的是 `4001 param is invalid`，并据此在文档里写「上游未开放到 SOLO 通道」——那个结论对它自己的测试账号成立，但不能推广。本插件因此采取「**全部呈现 + 失败时如实报错**」，不静默隐藏用户本来在 IDE 里能看到的模型。
+
+⚠️ **判据的坑（踩过，别重犯）**：第一版脚本只把 `response` 字段算作「有响应」，而 `glm-5.3-flash` 这类 thinking 模型先吐的是 `reasoning_content` —— 于是 6 条里 3 条被判成「SILENT/超时」，我差一点据此写出「CN 独占模型在我们的 function 下不可用」的**反向**错误结论，还会连带误导「要不要换插件」的判断。修正后：**`reasoning_content`、`tool_calls` 同样计入**，并且「未测出」与「上游明确拒绝」必须在输出里分开表述 —— 只有 4001/4023 才是负面结论，超时不是。
+
 ## 4. 模型目录：CN 22 个 / SOLO 26 个，是差集不是子集
 
 `state.vscdb` 的 `model_list_map` 按分组下发，两个产品的**分组名不同**：

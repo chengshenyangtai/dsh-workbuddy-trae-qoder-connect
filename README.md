@@ -1,6 +1,12 @@
 # dsh-workbuddy-trae-qoder-connect
 
-一个 DSH 插件：把 **WorkBuddy / Qoder / Trae** 三个 AI 编程订阅装进同一个会话，共用一个模型列表、一套对话历史。
+**DSH 插件 · 模型与账号接入（model provider）**：把 **WorkBuddy（个人版多账号 / 企业版）+ Qoder CN + Trae（Trae CN IDE 版 / TRAE SOLO CN）** 的订阅模型接进 DeepSeek Harness，共用一个模型列表、一套对话历史。
+
+> **DSH plugin that brings your WorkBuddy / Qoder / Trae subscriptions into DeepSeek Harness** — one model picker, one conversation history, live credit multipliers, and daily check-in claiming.
+
+同类插件大多只做**单一渠道**（只 WorkBuddy 或只 Trae），本插件把多家聚合进**同一个会话**：换渠道不用换插件、不用重开对话，中途切模型历史不丢。
+
+> 范围说明：Trae 这边接的是**国内两条产品线**（Trae CN / TRAE SOLO CN，一条命令互切，见下文）；**国际版（trae.ai）未实现** —— 需要另一套网关与订阅状态接口，详见末尾「与同类插件的差异」。
 
 ### 🔀 多渠道聚合
 
@@ -135,12 +141,36 @@ node probes/verify-trae-products.mjs         # Trae 双产品变体（40）
 
 `verify-trae-products.mjs` 里依赖真实快照的那一组（`~/.dsh/trae-cn/models.json` 等）在**没装 Trae 的机器上自动跳过**并注明原因，所以它在任何机器上都该是绿的。加 `--installed` 可以改测已安装的那份，用于确认「装上的代码 = 仓库里的代码」。
 
-`probes/` 下另有 10 个活体脚本（`qoder-one.mjs`、`trae-one.mjs`、`verify-qoder-probe-live.mjs` 等），发真实请求做单点实测，消耗额度，按需使用。
+`probes/` 下另有 11 个活体脚本（`qoder-one.mjs`、`trae-one.mjs`、`trae-cn-model-callability.mjs`、`verify-qoder-probe-live.mjs` 等），发真实请求做单点实测，消耗额度，按需使用。
+
+```bash
+# Trae CN 独占模型到底能不能调（6 条 × 16 token，输出已脱敏，可直接贴 issue）
+node probes/trae-cn-model-callability.mjs
+```
+
+## 与同类插件的差异
+
+GitHub/npm 上的同类大多是**单渠道**插件（只接 WorkBuddy，或只接 Trae）。本插件的差异化在于**聚合**：三家渠道进同一个模型选择器、同一套对话历史、同一个状态面板，并且 WorkBuddy 支持**多账号槽位 + 企业版**（企业版走自己的额度接口，个人版接口对企业号会返回空表，界面上就成了「0 积分」）。
+
+范围边界（诚实说明，别按名字猜）：
+
+| | 本插件 | 备注 |
+|---|---|---|
+| WorkBuddy 个人版 ×N / 企业版 | ✅ | 多账号靠渠道注册表，槽位数不限 |
+| Qoder CN | ✅ | PAT 或 App 会话两种凭据 |
+| Trae CN（IDE 版）/ TRAE SOLO CN | ✅ | `--app cn\|solo` 一条命令互切 |
+| **Trae 国际版（trae.ai）** | ❌ **未实现** | 需要另一套网关与订阅状态接口 |
+
+> 关于 `glm-5.3-flash` / `kimi-k2.8-preview` / `qwen3.8-flash` 这几个「只在 Trae IDE 目录里、SOLO 通道未必有」的模型：能不能调用**主要取决于账号档位**，不是插件能力。实测（2026-10-07，付费账号，`probes/trae-cn-model-callability.mjs`）6 个用例全部返回可用 —— 包括用 SOLO 的 `solo_work_lite` 和 CN 的 `chat_v3` 调 `glm-5.3-flash`；而免费账号侧同类插件的取证记录是 `4001 param is invalid`。所以本插件的做法是**默认切到 Trae CN 产品、按 IDE 目录导出模型**，让这几个模型进入可选列表，调用失败时如实报错而不是静默隐藏。
+>
+> 判据教训（脚本里也记了）：**`reasoning_content` 也算「上游在服务这个模型」**。第一版只数 `response`，于是 thinking 模型全被判成「无响应」，差点得出「这几个模型不可用」的反向错误结论。
 
 ## 已知限制
 
 - 带**图片**的会话在渠道间切换会报 `UNSUPPORTED_CONTENT`（DSH 宿主附件服务限制，插件层无法修复）
 - 面板内不可点击外部链接（宿主会把面板顶掉）——WorkBuddy 授权链接请复制到浏览器打开，或直接走上面的 CLI
+- Trae 国际版未实现（见上方差异表）
+- 倍率接口对 `functions` 数量延迟非线性（9 个 ≈10s、12 个直接超时），所以运行时和导出都分批查；单批失败只影响那批模型的倍率显示
 
 ## 说明
 
