@@ -6,7 +6,14 @@ credential.json
 credential*.json
 *.qoder-probe.json
 models.json
-trae/
+# ⚠️ 必须锚定到仓库根（前导斜杠）。不写斜杠的 `trae/` 匹配**任意层级**的同名目录，
+# 于是把 lib/providers/trae/（Trae provider 的**源码**）也一起忽略了 ——
+# 结果 lib/index.js 要 import 的 ./providers/trae/index.js 从未被提交，
+# 别人 clone 下来直接 ERR_MODULE_NOT_FOUND，仓库里的 Trae 渠道是空的。
+# 这里真正要挡的是宿主导出的凭据快照目录（$DSH_HOME 下的 trae/ 与 trae-cn/），
+# 万一被拷进仓库根，它们里面的 credential.json / models.json 仍由上面两行兜住。
+/trae/
+/trae-cn/
 connect-auth/
 
 # 依赖与产物
