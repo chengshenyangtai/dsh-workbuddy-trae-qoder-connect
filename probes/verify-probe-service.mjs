@@ -11,12 +11,13 @@
  */
 
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { installedLibDir } from "./_installed.mjs";
 
-// 插件装在 profile 的 node_modules 下；用 homedir 计算绝对路径，
-// 别用相对路径（`../../../.dsh/...` 会多算一层 .dsh，前面就踩过）。
-const PROBE_MODULE = join(homedir(), ".dsh", "profiles", "desktop", "node_modules", process.env.DSH_CONNECT_DIR ?? "dsh-connect", "lib", "shared", "probe.js");
+// 装在 profile 的 node_modules 下；目录名按依赖键解析（见 _installed.mjs），
+// 不写死包名 —— 改名过一次，写死会让整批探针以 ENOENT 变红。
+const PROBE_MODULE = join(installedLibDir(), "shared", "probe.js");
 const { ProbeService, ProbeStore, fingerprintModel, probeModel, randomSentinel } = await import(`file:///${PROBE_MODULE.replace(/\\/g, "/")}`);
 
 let pass = 0;
