@@ -163,7 +163,7 @@ Trae 之所以特殊：凭据在客户端的加密存储里，且目录接口要
 
 ## 质量
 
-自带 **16 个确定性验证脚本（224 项断言）**，不依赖网络、任何机器都能跑；
+自带 **17 个确定性验证脚本（232 项断言）**，不依赖网络、任何机器都能跑；
 另有 13 个活体脚本做真实请求单点实测。每条探针都对应一个真实修过的 bug，
 **且都做过反向验证**（把修复删掉，探针必须变红）：
 
@@ -180,6 +180,7 @@ node probes/verify-qoder-stream-fixes.mjs            # Qoder 首事件批 / 返�
 node probes/verify-workbuddy-tool-pairing.mjs        # 工具破损修复（9）
 node probes/verify-attachment-wiring.mjs             # 三家附件接线（9）
 node probes/verify-schemastery-field-shapes.mjs      # 宿主 schema 调用形状（9）
+node probes/verify-channel-disable-memory.mjs        # 禁用/启用渠道不丢模型勾选（8）
 node probes/verify-probe-account-wiring.mjs          # 探查账号接线（8）
 node probes/verify-qoder-error-classification.mjs    # 额度错误不再冒充"API 密钥无效"（8）
 node probes/verify-provider-config-schema.mjs        # provider 配置 schema（7）
@@ -200,7 +201,7 @@ lib/providers/{workbuddy,trae,qoder}/   三渠道（各自注册 provider + 回�
 lib/shared/probe.js                     渠道无关的档位探查（哨兵拒绝法）
 lib/panel.js · lib/client.js            统一面板：状态 / 签到 / 设置 / 模型勾选
 scripts/                                Trae 凭据导出 · WorkBuddy 扫码登录 · Trae 解密
-probes/                                 29 个脚本：16 确定性 + 13 活体
+probes/                                 30 个脚本：17 确定性 + 13 活体
 docs/                                   目录字段手册 · Trae 双产品接入 · 档位协议实证
 ```
 

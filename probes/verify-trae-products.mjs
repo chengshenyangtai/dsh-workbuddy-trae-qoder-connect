@@ -47,9 +47,14 @@ fs.mkdirSync(SANDBOX, { recursive: true });
 // 沙箱根声明 ESM：原包靠 package.json 的 "type":"module"，拷出来必须自己补，
 // 否则 .js 被当 CommonJS，import 直接语法错。
 fs.writeFileSync(path.join(SANDBOX, 'package.json'), JSON.stringify({ name: 'trae-provider-sandbox', type: 'module', private: true }, null, 1));
-// 只拷 trae provider 与 shared/http.js：垫片 `withLegacyImageBudget` 已提到 shared，
-// 所以这里不再需要 providers/workbuddy/**（它会把 variants-CnrmSn0Q.js 一并拖进来）。
-for (const rel of ['lib/providers/trae/index.js', 'lib/shared/http.js']) {
+// 只拷 trae provider 与它 import 的 shared/*.js：垫片 `withLegacyImageBudget` 在
+// shared/http.js，`readBody`/`pollInterval`/`writeState` 在 shared/node.js。
+// 不再需要 providers/workbuddy/**（它会把 variants-CnrmSn0Q.js 一并拖进来）。
+//
+// ⚠️ 这份清单**按目录扫**而不是手写：以前是写死的两个路径，2026-10-08 把三个
+// 重复函数提到 shared/node.js 之后探针直接 ERR_MODULE_NOT_FOUND。扫描能自动跟上
+// 后续的拆分，不必每次记得改这里。
+for (const rel of fs.readdirSync(path.join(SRC_ROOT, 'lib/shared')).filter((f) => f.endsWith('.js')).map((f) => `lib/shared/${f}`).concat(['lib/providers/trae/index.js'])) {
   const dst = path.join(SANDBOX, rel);
   fs.mkdirSync(path.dirname(dst), { recursive: true });
   fs.copyFileSync(path.join(SRC_ROOT, rel), dst);
