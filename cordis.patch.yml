@@ -13,5 +13,7 @@
 #               用哪个产品由凭据里的 product 字段决定，见 providers/trae/index.js）
 #   Qoder     : $DSH_HOME/qoder/pat 或 QODERCN_PAT
 - insert:
+    # id = 运行时插件标识（路由 /plugins/dsh-connect/* 与用户设置段的键，保持稳定）；
+    # name = npm 包名，loader 按它加载模块，必须与 package.json name 一致。
     - id: dsh-connect
-      name: dsh-connect
+      name: dsh-workbuddy-trae-qoder-connect
