@@ -163,21 +163,26 @@ Trae 之所以特殊：凭据在客户端的加密存储里，且目录接口要
 
 ## 质量
 
-自带 **15 个确定性验证脚本（216 项断言）**，不依赖网络、任何机器都能跑；
-另有 11 个活体脚本做真实请求单点实测。每条探针都对应一个真实修过的 bug，
+自带 **16 个确定性验证脚本（224 项断言）**，不依赖网络、任何机器都能跑；
+另有 13 个活体脚本做真实请求单点实测。每条探针都对应一个真实修过的 bug，
 **且都做过反向验证**（把修复删掉，探针必须变红）：
 
 ```bash
 node probes/verify-trae-tool-calling.mjs             # Trae 工具调用全链路（19）
 node probes/verify-trae-products.mjs                 # Trae 双产品变体（40）
 node probes/verify-probe-service.mjs                 # 哨兵探查服务（25）
-node probes/verify-trae-output-hygiene.mjs           # Trae 输出净化 / 断流可见性 / parser 交接（17）
 node probes/verify-qoder-effort-source.mjs           # Qoder 档位来源合并（21）
+node probes/verify-trae-output-hygiene.mjs           # Trae 输出净化 / 断流可见性 / parser 交接（17）
+node probes/verify-probe-contract.mjs                # 探查契约与 onProbed 接线（17）
 node probes/verify-qoder-auth-retry.mjs              # Qoder 凭据重试（11）
 node probes/verify-trae-parser-handoff.mjs           # SSE 残片与收尾（11）
+node probes/verify-qoder-stream-fixes.mjs            # Qoder 首事件批 / 返回形状 / 取消接线（9）
 node probes/verify-workbuddy-tool-pairing.mjs        # 工具破损修复（9）
 node probes/verify-attachment-wiring.mjs             # 三家附件接线（9）
+node probes/verify-schemastery-field-shapes.mjs      # 宿主 schema 调用形状（9）
+node probes/verify-probe-account-wiring.mjs          # 探查账号接线（8）
 node probes/verify-qoder-error-classification.mjs    # 额度错误不再冒充"API 密钥无效"（8）
+node probes/verify-provider-config-schema.mjs        # provider 配置 schema（7）
 node probes/verify-workbuddy-reasoning-levels.mjs    # 档位映射（off 恒为 null）（4）
 ```
 
@@ -195,7 +200,7 @@ lib/providers/{workbuddy,trae,qoder}/   三渠道（各自注册 provider + 回�
 lib/shared/probe.js                     渠道无关的档位探查（哨兵拒绝法）
 lib/panel.js · lib/client.js            统一面板：状态 / 签到 / 设置 / 模型勾选
 scripts/                                Trae 凭据导出 · WorkBuddy 扫码登录 · Trae 解密
-probes/                                 26 个脚本：15 确定性 + 11 活体
+probes/                                 29 个脚本：16 确定性 + 13 活体
 docs/                                   目录字段手册 · Trae 双产品接入 · 档位协议实证
 ```
 
