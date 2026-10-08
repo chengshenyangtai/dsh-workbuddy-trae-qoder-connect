@@ -366,13 +366,20 @@ ok("接线：client.chatStream 调用点传入了 tools / toolChoice", () => {
    * 只查键名会放过"接了个空"的假接线（已实测：把调用点改成 `tools: undefined`
    * 时，只查键名的版本仍然全绿）。
    */
-  if (!/tools:\s*(settings\.toolsEnabled\s*\?\s*)?toTraeTools\(/.test(code)) {
+  if (!/tools:\s*toTraeTools\(/.test(code)) {
     throw new Error("调用点没把 toTraeTools(request.tools) 接上 —— 模型看不到任何工具，agent 回合必然失败");
   }
-  if (!/toolChoice:\s*(settings\.toolsEnabled\s*\?\s*)?request\.tool_choice/.test(code)) {
+  if (!/toolChoice:\s*request\.tool_choice/.test(code)) {
     throw new Error("调用点没把 request.tool_choice 接上");
   }
-  if (!/toolsEnabled/.test(code)) throw new Error("tools 没有走 toolsEnabled 开关");
+  /**
+   * 2026-10-08：`toolsEnabled` 开关已随配置收口一并删除（配置通道本来就不通，
+   * 开关是拧不动的假阀）。这里反向钉住"不得复活死开关"—— 若有人把它加回来，
+   * 必须同时把配置通道接通，否则又是一个拧不动的假阀。
+   */
+  if (/toolsEnabled/.test(code)) {
+    throw new Error("调用点又出现了 toolsEnabled 死开关（配置通道已收口，条件恒真）");
+  }
 });
 
 ok("接线：上游 payload 组装处带上了 tools / tool_choice", () => {
