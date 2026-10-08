@@ -26,7 +26,7 @@ const HOME_DIR = os.homedir();
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..");
 const SRC = process.argv.includes("--installed")
-  ? path.join(HOME_DIR, ".dsh", "profiles", "desktop", "node_modules", "dsh-connect")
+  ? path.join(HOME_DIR, ".dsh", "profiles", "desktop", "node_modules", process.env.DSH_CONNECT_DIR ?? "dsh-connect")
   : REPO;
 
 // 解析真实的 schemastery：优先 profile 的 node_modules（与宿主运行时同源）。

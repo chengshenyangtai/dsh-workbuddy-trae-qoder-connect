@@ -23,7 +23,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..");
 const SRC = process.argv.includes("--installed")
-  ? path.join(os.homedir(), ".dsh", "profiles", "desktop", "node_modules", "dsh-connect")
+  ? path.join(os.homedir(), ".dsh", "profiles", "desktop", "node_modules", process.env.DSH_CONNECT_DIR ?? "dsh-connect")
   : REPO;
 
 /**

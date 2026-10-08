@@ -13,7 +13,7 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const LIB = join(homedir(), ".dsh", "profiles", "desktop", "node_modules", "dsh-connect", "lib");
+const LIB = join(homedir(), ".dsh", "profiles", "desktop", "node_modules", process.env.DSH_CONNECT_DIR ?? "dsh-connect", "lib");
 const qoderSrc = readFileSync(join(LIB, "providers", "qoder", "index.js"), "utf8");
 
 let pass = 0;

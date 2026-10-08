@@ -19,7 +19,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { createCipheriv, createHash, publicEncrypt, randomUUID } from "node:crypto";
 
-const PLUGIN_DIR = join(homedir(), ".dsh", "profiles", "desktop", "node_modules", "dsh-connect");
+const PLUGIN_DIR = join(homedir(), ".dsh", "profiles", "desktop", "node_modules", process.env.DSH_CONNECT_DIR ?? "dsh-connect");
 // 从插件源码里取常量（照抄实现，避免探针与线上不同形）。
 const qoderSrc = readFileSync(join(PLUGIN_DIR, "lib", "providers", "qoder", "index.js"), "utf8");
 

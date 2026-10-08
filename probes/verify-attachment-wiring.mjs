@@ -45,7 +45,7 @@ import { join } from 'node:path';
 const USE_INSTALLED = process.argv.includes('--installed');
 const REPO_ROOT = join(homedir(), '.dsh', 'repos', 'dsh-workbuddy-trae-qoder-connect');
 const SRC = USE_INSTALLED
-  ? join(homedir(), '.dsh', 'profiles', 'desktop', 'node_modules', 'dsh-connect', 'lib', 'providers')
+  ? join(homedir(), '.dsh', 'profiles', 'desktop', 'node_modules', process.env.DSH_CONNECT_DIR ?? 'dsh-connect', 'lib', 'providers')
   : join(REPO_ROOT, 'lib', 'providers');
 
 let pass = 0;

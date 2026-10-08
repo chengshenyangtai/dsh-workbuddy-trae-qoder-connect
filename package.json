@@ -1,8 +1,17 @@
 {
-  "name": "dsh-connect",
-  "displayName": "DSH Connect",
+  "name": "dsh-workbuddy-trae-qoder-connect",
+  "displayName": "WorkBuddy + Trae + Qoder Connect",
   "description": "一个插件接入全部渠道模型：WorkBuddy（含企业版，多账号注册表）/ Trae / Qoder CN。支持渠道添加、改名、删除、凭据管理、统一状态面板与一键签到。",
-  "version": "0.2.0",
+  "version": "0.3.0",
+  "author": {
+    "name": "chengshenyangtai",
+    "url": "https://github.com/chengshenyangtai"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chengshenyangtai/dsh-workbuddy-trae-qoder-connect.git"
+  },
+  "homepage": "https://github.com/chengshenyangtai/dsh-workbuddy-trae-qoder-connect#readme",
   "keywords": [
     "dsh-plugin",
     "deepseek-harness",
@@ -10,8 +19,11 @@
     "model-provider",
     "workbuddy",
     "trae",
+    "trae-cn",
     "qoder",
-    "connect"
+    "qoder-cn",
+    "connect",
+    "aggregate"
   ],
   "type": "module",
   "engines": {

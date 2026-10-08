@@ -14,7 +14,7 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const SRC = join(homedir(), ".dsh", "profiles", "desktop", "node_modules", "dsh-connect", "lib", "providers", "trae", "index.js");
+const SRC = join(homedir(), ".dsh", "profiles", "desktop", "node_modules", process.env.DSH_CONNECT_DIR ?? "dsh-connect", "lib", "providers", "trae", "index.js");
 const src = readFileSync(SRC, "utf8");
 const CATALOG = JSON.parse(readFileSync(join(homedir(), ".dsh", "trae", "models.json"), "utf8"));
 
