@@ -163,7 +163,7 @@ Trae 之所以特殊：凭据在客户端的加密存储里，且目录接口要
 
 ## 质量
 
-自带 **13 个确定性验证脚本（226 项断言）**，不依赖网络、任何机器都能跑；
+自带 **14 个确定性验证脚本（231 项断言）**，不依赖网络、任何机器都能跑；
 另有 11 个活体脚本做真实请求单点实测。每条探针都对应一个真实修过的 bug，
 **且都做过反向验证**（把修复删掉，探针必须变红）：
 
@@ -173,6 +173,7 @@ node probes/verify-trae-products.mjs          # Trae 双产品变体（40）
 node probes/verify-probe-service.mjs          # 哨兵探查服务（25）
 node probes/verify-qoder-auth-retry.mjs        # Qoder 凭据重试 / 额度与凭据的判定（11）
 node probes/verify-trae-output-hygiene.mjs     # Trae 输出净化与断流可见性（14）
+node probes/verify-workbuddy-tool-pairing.mjs  # WorkBuddy 工具配对修复（5）
 node probes/verify-attachment-wiring.mjs      # 三家附件接线（9）
 ```
 
