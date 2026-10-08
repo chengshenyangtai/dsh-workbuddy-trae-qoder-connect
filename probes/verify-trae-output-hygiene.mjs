@@ -395,6 +395,123 @@ ok("C3: 上游请求确实带了 tools（清洗开关的前提）", async () => 
   );
 });
 
+/**
+ * C. **首事件预读的 parser 交接**（2026-10-08，事故链的真正源头）。
+ *
+ * 这组必须走**真实 chatStream** 才能测到：缺陷在接线，不在 parser 本身 ——
+ * 单独 new 一个 parser 测它的行为永远是绿的（反向验证时 M1/M2 就是这样漏掉的）。
+ *
+ * 手法：上游把第一个 TCP 分片切在**事件中间**（第二个事件只发一半），这样首读
+ * 退出时 parser A 里一定留着一个半截事件；随后 `translate` 若新建 parser，
+ * 那半截就永久丢失。
+ */
+function makeChunkedUpstream(chunks) {
+  const encoder = new TextEncoder();
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    let i = 0;
+    return {
+      ok: true,
+      status: 200,
+      body: {
+        getReader() {
+          return {
+            async read() {
+              if (i >= chunks.length) return { done: true, value: undefined };
+              const value = encoder.encode(chunks[i]);
+              i += 1;
+              return { done: false, value };
+            },
+            cancel() {},
+          };
+        },
+      },
+      text: async () => "",
+    };
+  };
+  return () => { globalThis.fetch = realFetch; };
+}
+
+ok("C1: 首读切在事件中间时，后半截事件**不丢**（parser 交接）", async () => {
+  const whole = sse("output", { response: "后半截不能丢" });
+  const cut = Math.floor(whole.length / 2);
+  const restore = makeChunkedUpstream([
+    sse("output", { response: "前半句。" }) + whole.slice(0, cut),
+    whole.slice(cut),
+    sse("done", { finish_reason: "stop" }),
+  ]);
+  try {
+    const result = await client.chatStream(
+      { token: "t", appId: "a", appVersionCode: 1, gateway: "http://127.0.0.1:1", product: { functions: ["solo_agent"], reqSource: 1 } },
+      { model: "m", function: "solo_agent", messages: [{ role: "user", content: "hi" }] },
+      AbortSignal.timeout(20000),
+    );
+    const chunks = await streamChunks(result);
+    const content = chunks.map((c) => c.choices[0].delta.content ?? "").join("");
+    if (!content.includes("后半截不能丢")) {
+      throw new Error(`半截事件被丢弃（正文=${JSON.stringify(content)}）—— parser 交接没做对`);
+    }
+    if (!content.includes("前半句。")) throw new Error(`前半句丢了：${JSON.stringify(content)}`);
+  } finally {
+    restore();
+  }
+});
+
+ok("C2: 丢掉的若是**工具调用的头部片**，下游会拿到无名调用（这就是历史污染的来源）", async () => {
+  // 首片带 id/name，分片边界正好把它切开 —— 交接正确时它必须完整送达
+  const header = sse("output", {
+    tool_calls: [{ index: 0, id: "call_head", type: "function", function_call: { name: "write_note", arguments: "" } }],
+  });
+  const cut = Math.floor(header.length / 2);
+  const restore = makeChunkedUpstream([
+    header.slice(0, cut),
+    header.slice(cut) + sse("output", { tool_calls: [{ index: 0, id: "", type: "", function_call: { name: "", arguments: '{"x":1}' } }] }),
+    sse("done", { finish_reason: "stop" }),
+  ]);
+  try {
+    const result = await client.chatStream(
+      { token: "t", appId: "a", appVersionCode: 1, gateway: "http://127.0.0.1:1", product: { functions: ["solo_agent"], reqSource: 1 } },
+      { model: "m", function: "solo_agent", messages: [{ role: "user", content: "hi" }] },
+      AbortSignal.timeout(20000),
+    );
+    const chunks = await streamChunks(result);
+    const calls = chunks.flatMap((c) => c.choices[0].delta.tool_calls ?? []);
+    const named = calls.find((c) => c.function?.name === "write_note");
+    if (named === undefined) {
+      throw new Error(`头部片丢了 → 只剩无名分片（calls=${JSON.stringify(calls).slice(0, 200)}）`);
+    }
+    if (calls.some((c) => c.function && c.function.name === "")) {
+      throw new Error(`出现了空名字的调用（这就是污染历史的形态）：${JSON.stringify(calls).slice(0, 200)}`);
+    }
+  } finally {
+    restore();
+  }
+});
+
+ok("C3: 最后一个事件没有尾随空行时，done 仍被解析（真实 finish_reason 不被兜底顶替）", async () => {
+  const restore = makeChunkedUpstream([
+    sse("output", { response: "内容。" }),
+    // 注意：**故意不补** 结尾的 \n\n
+    'event: done\ndata: {"finish_reason":"length"}',
+  ]);
+  try {
+    const result = await client.chatStream(
+      { token: "t", appId: "a", appVersionCode: 1, gateway: "http://127.0.0.1:1", product: { functions: ["solo_agent"], reqSource: 1 } },
+      { model: "m", function: "solo_agent", messages: [{ role: "user", content: "hi" }] },
+      AbortSignal.timeout(20000),
+    );
+    const chunks = await streamChunks(result);
+    const finals = chunks.filter((c) => c.choices[0].finish_reason !== null);
+    if (finals.length === 0) throw new Error("没有 finish_reason");
+    const reason = finals[finals.length - 1].choices[0].finish_reason;
+    if (reason !== "length") {
+      throw new Error(`真实 finish_reason 被兜底顶替成 ${JSON.stringify(reason)}（应为 length）—— 截断与正常结束分不出来了`);
+    }
+  } finally {
+    restore();
+  }
+});
+
 fs.rmSync(stubDir, { recursive: true, force: true });
 // 等所有用例跑完再统计（漏了这一行，"全绿"就是假的）。
 await chain;

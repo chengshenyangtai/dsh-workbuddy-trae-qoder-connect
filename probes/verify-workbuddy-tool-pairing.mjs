@@ -211,7 +211,7 @@ await ok("2. 完好的历史 → **逐字节原样转发**（不做任何多余�
   });
 });
 
-await ok("3. tool_calls 全部无结果时，整个字段被移除（assistant 消息保留）", async () => {
+await ok("3. tool_calls 全部无结果且**无正文**时，整条 assistant 消息被丢弃（与 pi-ai 对齐）", async () => {
   await withShim(async ({ post, capturedBodies }) => {
     await post({
       model: "m",
@@ -223,10 +223,100 @@ await ok("3. tool_calls 全部无结果时，整个字段被移除（assistant �
       ],
     });
     const msgs = capturedBodies()[0].messages ?? [];
+    /**
+     * 删空 tool_calls 后剩下「无正文 + 无 tool_calls」的 assistant 消息 —— 这正是
+     * pi-ai 自己会跳过的非法形状（"either content or tool_calls, but not none"），
+     * 所以整条丢弃，而不是留一个空壳给上游。
+     */
+    if (msgs.some((m) => m.role === "assistant")) {
+      throw new Error(`空壳 assistant 消息还在：${JSON.stringify(msgs).slice(0, 200)}`);
+    }
+    if (!msgs.some((m) => m.role === "user")) throw new Error("user 消息被误删");
+  });
+});
+
+await ok("3b. tool_calls 全部无结果但**有正文**时：保留消息、只去掉 tool_calls 字段", async () => {
+  await withShim(async ({ post, capturedBodies }) => {
+    await post({
+      model: "m",
+      stream: true,
+      messages: [
+        { role: "user", content: "hi" },
+        { role: "assistant", content: "我先看看。", tool_calls: [{ id: "x2", type: "function", function: { name: "f", arguments: "{}" } }] },
+        { role: "user", content: "继续" },
+      ],
+    });
+    const msgs = capturedBodies()[0].messages ?? [];
     const a = msgs.find((m) => m.role === "assistant");
-    if (a === undefined) throw new Error("assistant 消息丢了");
+    if (a === undefined) throw new Error("带正文的 assistant 消息被误删");
     if (a.tool_calls !== undefined) throw new Error("空的 tool_calls 字段还在");
-    if (a.content !== "") throw new Error("content 被误改");
+    if (a.content !== "我先看看。") throw new Error(`正文被改动：${JSON.stringify(a.content)}`);
+  });
+});
+
+await ok("6. **空函数名调用 + 其配对结果**被整对摘掉（11133 的真正根因）", async () => {
+  await withShim(async ({ post, capturedBodies }) => {
+    /**
+     * 事故形态：上游适配层退化产出一条 `function.name === ""` 的调用，宿主按
+     * "未知工具"执行并记进历史。实测该形态让 deepseek-v4.1-flash 直接
+     * 400/11133（4 条消息、约 200 字节即可复现），而 glm-5.3-flash 宽容放行。
+     */
+    await post({
+      model: "deepseek-v4.1-flash",
+      stream: true,
+      messages: [
+        { role: "user", content: "hi" },
+        { role: "assistant", content: "我想读图。", tool_calls: [{ id: "call_bad", type: "function", function: { name: "", arguments: "{}" } }] },
+        { role: "tool", tool_call_id: "call_bad", content: 'Error: unknown tool ""' },
+        { role: "assistant", content: "算了。" },
+        { role: "user", content: "继续" },
+      ],
+    });
+    const msgs = capturedBodies()[0].messages ?? [];
+    if (JSON.stringify(msgs).includes('"name":""')) throw new Error("空名调用仍被转发给上游");
+    if (msgs.some((m) => m.role === "tool" && m.tool_call_id === "call_bad")) throw new Error("空名调用的结果还在（会变成孤儿）");
+    if (!msgs.some((m) => m.role === "assistant" && m.content === "算了。")) throw new Error("正常消息被误删");
+  });
+});
+
+await ok("6b. **缺 name 键**的调用同样按退化处理（下游同样得到无名调用）", async () => {
+  await withShim(async ({ post, capturedBodies }) => {
+    /**
+     * OpenAI 流式契约里首片必定带 name，所以"有 id 但没有 name 键"只可能是
+     * 首片丢失后的残片 —— 下游 pi-ai 以 name 建块，最终仍是一个没法执行的
+     * 无名调用（与空串同效），所以一并摘掉。
+     */
+    await post({
+      model: "m",
+      stream: true,
+      messages: [
+        { role: "user", content: "hi" },
+        { role: "assistant", content: "", tool_calls: [{ id: "call_noname", type: "function", function: { arguments: "{}" } }] },
+        { role: "tool", tool_call_id: "call_noname", content: "out" },
+      ],
+    });
+    const msgs = capturedBodies()[0].messages ?? [];
+    if (msgs.some((m) => (m.tool_calls ?? []).some((c) => c.id === "call_noname"))) {
+      throw new Error("缺 name 键的调用未被摘掉");
+    }
+    if (msgs.some((m) => m.role === "tool" && m.tool_call_id === "call_noname")) throw new Error("配对结果未一起摘掉");
+  });
+});
+
+await ok("6c. 空白字符串 name（\"   \"）同样按退化处理", async () => {
+  await withShim(async ({ post, capturedBodies }) => {
+    await post({
+      model: "m",
+      stream: true,
+      messages: [
+        { role: "user", content: "hi" },
+        { role: "assistant", content: "x", tool_calls: [{ id: "call_ws", type: "function", function: { name: "   ", arguments: "{}" } }] },
+        { role: "tool", tool_call_id: "call_ws", content: "out" },
+      ],
+    });
+    const msgs = capturedBodies()[0].messages ?? [];
+    if (msgs.some((m) => (m.tool_calls ?? []).some((c) => c.id === "call_ws"))) throw new Error("空白 name 未被判为退化");
+    if (msgs.some((m) => m.role === "tool" && m.tool_call_id === "call_ws")) throw new Error("配对结果未一起摘掉");
   });
 });
 
