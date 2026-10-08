@@ -42,7 +42,7 @@ WorkBuddy（个人版多账号 / 企业版）· Qoder CN · Trae CN（IDE 版 / 
 
 | 渠道 | 能接入什么 | 登录方式 |
 |---|---|---|
-| **WorkBuddy** | 个人版多账号（槽位数不限）+ 企业版 | 扫码授权（腾讯登录页） |
+| **WorkBuddy** | 个人版多账号（槽位数不限）+ 企业版 | AI 工作流 / 脚本生成登录链接，浏览器点开登录 |
 | **Qoder CN** | 官方 PAT，或直接用桌面 App 的登录态 | 二选一 |
 | **Trae CN / TRAE SOLO CN** | 两个产品各自的全部模型 | 本机客户端凭据导出 |
 
@@ -145,7 +145,7 @@ https://github.com/chengshenyangtai/dsh-workbuddy-trae-qoder-connect
 | 渠道 | 模型目录 | 凭据 |
 |---|---|---|
 | **Qoder** | **实时从上游拉取** | PAT 或 App 会话，自动刷新 |
-| **WorkBuddy** | **实时从上游拉取** | 扫码写入，30 秒巡检 |
+| **WorkBuddy** | **实时从上游拉取** | 登录链接写入，30 秒巡检 |
 | **Trae** | **本机快照**：脚本从客户端解密导出 | 同左（重跑导出即换产品/续期） |
 
 Trae 之所以特殊：凭据在客户端的加密存储里，且目录接口要三个特定请求头才回全量数据
@@ -157,6 +157,7 @@ Trae 之所以特殊：凭据在客户端的加密存储里，且目录接口要
 - **Trae 国际版（trae.ai）未实现** —— 需要另一套网关与订阅状态接口
 - **面板内不能点外部链接**（DSH 宿主会把面板顶掉）—— WorkBuddy 授权链接请复制到浏览器，或走命令行脚本
 - **插件代码改动需重启 DSH** —— 只有凭据/产品切换是 30 秒内热生效
+- **宿主升级后留意版本门禁** —— `peerDependencies` 需覆盖宿主的 `@deepseek-ai/dsh-*` 版本，否则插件会被整拒（表现为插件从管理页消失）。设置页插槽新旧两代（`settings.plugin.item` / 0.2+ 的 `settings.plugins.tab`）都注册了，宿主换代自动择路
 - **部分模型的档位需要你手点一次检测** —— 上游不声明就无法自动得知（会消耗少量额度）
 - 少数模型不是 1M 上下文（如 `kimi-k2.6`、`minimax-m2.7` 等较老的条目），以模型选择器里显示的为准
 - 倍率数据从上游注册表拉取，`functions` 数量多时上游响应会变慢，所以分批查询；单批失败只影响那批模型的倍率显示
@@ -188,12 +189,7 @@ node probes/verify-provider-config-schema.mjs        # provider 配置 schema（
 node probes/verify-workbuddy-reasoning-levels.mjs    # 档位映射（off 恒为 null）（4）
 ```
 
-四条写进骨头的教训：
-
-- **对宿主契约 API 的断言必须拿真包跑** —— 沙箱 stub 掉 peer 依赖时，`z.enum` 这类错误恰好被 stub 吞掉：测试全绿，而插件在真实宿主里加载即崩
-- **断言要检查值，不能只匹配键名** —— 第一版接线断言写 `/\btools\s*:/`，于是 `tools: undefined` 也通过；假阴性比没有断言更糟
-- **异步用例必须 await，且要串行** —— 第一版探针的 `ok()` 不 await，所有失败都变成未处理的 promise rejection，`try/catch` 抓不到，测试永远"全绿"；而且这些用例共享全局 `fetch`，并发会互相串味。两处都修正后才真正抓到回归
-- **接线缺陷要端到端测，读源码字符串测不出来** —— "首事件预读后把 parser 交给 translate" 这类修复，单独 new 一个 parser 做单元测试**永远是绿的**（反向验证时就是这样漏掉的）；只有让假的 TCP 分片切在事件中间、走完整 `chatStream` 才抓得住。同理，"函数写对了但没人调用"也只能靠接线断言发现
+探针纪律：断言拿**真实宿主 peer 包**跑，契约错误不能被沙箱 stub 吞掉；断言**值**而非键名；异步用例 await 且串行（共享全局 `fetch` 的用例并发会互相串味）；接线类修复走完整链路端到端测 —— 单组件单测是"永远绿"的。
 
 ## 项目结构
 
@@ -201,7 +197,7 @@ node probes/verify-workbuddy-reasoning-levels.mjs    # 档位映射（off 恒为
 lib/providers/{workbuddy,trae,qoder}/   三渠道（各自注册 provider + 回环 shim + 路由）
 lib/shared/probe.js                     渠道无关的档位探查（哨兵拒绝法）
 lib/panel.js · lib/client.js            统一面板：状态 / 签到 / 设置 / 模型勾选
-scripts/                                Trae 凭据导出 · WorkBuddy 扫码登录 · Trae 解密
+scripts/                                Trae 凭据导出 · WorkBuddy 登录链接 · Trae 解密
 probes/                                 30 个脚本：17 确定性 + 13 活体
 docs/                                   目录字段手册 · Trae 双产品接入 · 档位协议实证
 ```
