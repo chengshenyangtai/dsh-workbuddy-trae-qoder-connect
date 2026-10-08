@@ -163,25 +163,30 @@ Trae 之所以特殊：凭据在客户端的加密存储里，且目录接口要
 
 ## 质量
 
-自带 **14 个确定性验证脚本（231 项断言）**，不依赖网络、任何机器都能跑；
+自带 **15 个确定性验证脚本（216 项断言）**，不依赖网络、任何机器都能跑；
 另有 11 个活体脚本做真实请求单点实测。每条探针都对应一个真实修过的 bug，
 **且都做过反向验证**（把修复删掉，探针必须变红）：
 
 ```bash
-node probes/verify-trae-tool-calling.mjs      # Trae 工具调用全链路（19）
-node probes/verify-trae-products.mjs          # Trae 双产品变体（40）
-node probes/verify-probe-service.mjs          # 哨兵探查服务（25）
-node probes/verify-qoder-auth-retry.mjs        # Qoder 凭据重试 / 额度与凭据的判定（11）
-node probes/verify-trae-output-hygiene.mjs     # Trae 输出净化与断流可见性（14）
-node probes/verify-workbuddy-tool-pairing.mjs  # WorkBuddy 工具配对修复（5）
-node probes/verify-attachment-wiring.mjs      # 三家附件接线（9）
+node probes/verify-trae-tool-calling.mjs             # Trae 工具调用全链路（19）
+node probes/verify-trae-products.mjs                 # Trae 双产品变体（40）
+node probes/verify-probe-service.mjs                 # 哨兵探查服务（25）
+node probes/verify-trae-output-hygiene.mjs           # Trae 输出净化 / 断流可见性 / parser 交接（17）
+node probes/verify-qoder-effort-source.mjs           # Qoder 档位来源合并（21）
+node probes/verify-qoder-auth-retry.mjs              # Qoder 凭据重试（11）
+node probes/verify-trae-parser-handoff.mjs           # SSE 残片与收尾（11）
+node probes/verify-workbuddy-tool-pairing.mjs        # 工具破损修复（9）
+node probes/verify-attachment-wiring.mjs             # 三家附件接线（9）
+node probes/verify-qoder-error-classification.mjs    # 额度错误不再冒充"API 密钥无效"（8）
+node probes/verify-workbuddy-reasoning-levels.mjs    # 档位映射（off 恒为 null）（4）
 ```
 
-三条写进骨头的教训：
+四条写进骨头的教训：
 
 - **对宿主契约 API 的断言必须拿真包跑** —— 沙箱 stub 掉 peer 依赖时，`z.enum` 这类错误恰好被 stub 吞掉：测试全绿，而插件在真实宿主里加载即崩
 - **断言要检查值，不能只匹配键名** —— 第一版接线断言写 `/\btools\s*:/`，于是 `tools: undefined` 也通过；假阴性比没有断言更糟
 - **异步用例必须 await，且要串行** —— 第一版探针的 `ok()` 不 await，所有失败都变成未处理的 promise rejection，`try/catch` 抓不到，测试永远"全绿"；而且这些用例共享全局 `fetch`，并发会互相串味。两处都修正后才真正抓到回归
+- **接线缺陷要端到端测，读源码字符串测不出来** —— "首事件预读后把 parser 交给 translate" 这类修复，单独 new 一个 parser 做单元测试**永远是绿的**（反向验证时就是这样漏掉的）；只有让假的 TCP 分片切在事件中间、走完整 `chatStream` 才抓得住。同理，"函数写对了但没人调用"也只能靠接线断言发现
 
 ## 项目结构
 
@@ -190,7 +195,7 @@ lib/providers/{workbuddy,trae,qoder}/   三渠道（各自注册 provider + 回�
 lib/shared/probe.js                     渠道无关的档位探查（哨兵拒绝法）
 lib/panel.js · lib/client.js            统一面板：状态 / 签到 / 设置 / 模型勾选
 scripts/                                Trae 凭据导出 · WorkBuddy 扫码登录 · Trae 解密
-probes/                                 22 个脚本：11 确定性 + 11 活体
+probes/                                 26 个脚本：15 确定性 + 11 活体
 docs/                                   目录字段手册 · Trae 双产品接入 · 档位协议实证
 ```
 
