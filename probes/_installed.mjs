@@ -26,9 +26,6 @@ export function installedPackageDir() {
 	} catch {
 		/* profile 读不到就往下兜底 */
 	}
-	for (const name of ["dsh-workbuddy-trae-qoder-connect", "dsh-connect"]) {
-		if (existsSync(join(root, name, marker))) return join(root, name);
-	}
 	return join(root, "dsh-workbuddy-trae-qoder-connect");
 }
 

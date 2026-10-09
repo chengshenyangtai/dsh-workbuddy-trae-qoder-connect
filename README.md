@@ -2,9 +2,11 @@
 
 ![三家订阅，一个模型下拉](assets/social-preview.png)
 
-**一个插件，把你三家 AI 订阅的模型全部接进 DeepSeek Harness。**
-WorkBuddy（个人版多账号 / 企业版）· Qoder CN · Trae CN（IDE 版 / TRAE SOLO CN），
-共用一个模型下拉、一套对话历史、一个状态面板 —— 换模型不用换插件、不用重开会话。
+**你已经付了三家 AI 订阅的钱。为什么还要在三个窗口、三个插件、三套历史之间来回切？**
+
+这一个插件，把 **WorkBuddy（个人版多账号 / 企业版）· Qoder CN · Trae CN（IDE 版 / TRAE SOLO CN）**
+全部接进 DeepSeek Harness —— 一个模型下拉、一套对话历史、一个状态面板。
+**对话中途换渠道换模型，历史不丢。**
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -15,10 +17,10 @@ WorkBuddy（个人版多账号 / 企业版）· Qoder CN · Trae CN（IDE 版 / 
 
 ---
 
-## 为什么用它
+## 你为什么想要它
 
-同类插件基本都是**单渠道**：只接 WorkBuddy 的、只接 Trae 的、只接 Qoder 的各一个包，
-装三份、开三个面板、维护三套凭据。本插件把三家聚合进**同一个** provider 层：
+同类的渠道插件基本都是**单渠道**：接 WorkBuddy 的、接 Trae 的、接 Qoder 的各一个包。
+于是你装三份、开三个面板、维护三套凭据 —— 而它们本该是同一个东西。
 
 | | 单渠道插件 ×3 | **本插件** |
 |---|---|---|
@@ -28,17 +30,38 @@ WorkBuddy（个人版多账号 / 企业版）· Qoder CN · Trae CN（IDE 版 / 
 | 每日签到 | 点三次 | **一次全领**（幂等） |
 | 装几个包 | 三个 | **一个** |
 
+三家协议完全不同（OpenAI 方言 / 私有 agent 协议 / 带自定义编码的双层 SSE），
+插件在中间当翻译 —— 对 DSH 和你来说，它们长得一样。
+
 ## 核心能力
 
-- **🔀 三家订阅，一个列表** — 三个渠道（WorkBuddy 支持多账号槽位，企业版独立计费）汇成一个模型下拉，每个模型旁标注积分倍率，贵不贵一眼可见
-- **🔁 会话内换模型** — 三家协议完全不同（OpenAI 方言 / 私有 agent 协议），插件在中间做翻译；对 DSH 和你来说它们长得一样
-- **🛠️ Agent 工具调用** — 能真正"干活"而不只是聊天：读文件、跑命令、改代码。Trae 已端到端实测（真实上游返回结构化工具调用、参数分片正确拼接、`finish_reason` 正确改写）
-- **🧠 每个模型的思考档位** — 按模型真实能力给档位（轻/中/高/极高），不是一刀切；上游没声明的模型可以一键**实测**出来
-- **🖼️ 读图** — 接通 DSH 附件服务，按各模型的上游标注开放
-- **📏 百万级上下文** — 主力模型普遍支持 1M 上下文，长会话不被 200k 截断
-- **📅 打开面板自动签到** — 各渠道每日积分一次领完，幂等，可关
-- **🎛️ 模型列表只留常用的** — 渠道行点「模型 N」勾选，改完立刻生效、不用重启
-- **🧩 Trae 两个产品都支持** — Trae CN 与 TRAE SOLO CN 一条命令互切，凭据独立、模型目录分存
+### 聚合
+
+- **🔀 三家订阅，一个列表** —— 汇成单个模型下拉，按渠道分组，每个模型旁标注**积分倍率**，贵不贵一眼可见
+- **🔁 会话内换模型** —— 中途从 WorkBuddy 换到 Qoder 再换到 Trae，历史不丢
+- **➕ 渠道增删改名** —— 注册表里加槽位、就地改名、删除（凭据文件一并清理）
+- **🎛️ 模型只留常用的** —— 渠道行点「已选 X / 共 N」勾选，改完立刻生效、不用重启
+
+### 思考强度（reasoning effort）
+
+- **🧠 逐模型的档位** —— 按每个模型**真实声明**的档位给选项（轻/中/高/极高），不是一刀切
+- **⚡ 跟目录一起刷新** —— 点「更新模型」时档位**连同模型目录一起重取**，上游加档/收档立即反映，并在气泡里告诉你「N 个模型的思考档位已更新」
+- **🎯 新会话用上游默认档** —— 未手动选档时，用该模型目录声明的默认档（如 `dmodel` 默认 `max`、`qmodel_38max` 默认 `medium`），而不是想当然的固定值
+- **🔬 没声明就实测** —— 上游不声明档位的模型（如 `glm-5.3`、`hy3`），一键**探查**实测出来，结果缓存
+- **🛡️ 不给必然报错的选项** —— `off` 一律不提供（实测两家上游都对它返回 400）；关思考走另一条已验证的路径（Qoder 用 id 后缀 `@nothink`）
+
+### 干活
+
+- **🛠️ Agent 工具调用** —— 能真正"干活"而不只是聊天：读文件、跑命令、改代码。Trae 已端到端实测（真实上游返回结构化工具调用、参数分片正确拼接、`finish_reason` 正确改写）
+- **🖼️ 读图** —— 接通 DSH 附件服务，按各模型的上游标注开放
+- **📏 百万级上下文** —— 主力模型普遍支持 1M 上下文，长会话不被 200k 截断
+
+### 运维
+
+- **📅 打开面板自动签到** —— 各渠道每日积分一次领完，幂等，可关
+- **🔄 每个渠道独立「更新模型」** —— 重抓该渠道最新目录；Trae 会**现场跑导出脚本**从桌面端重新导出
+- **🧩 Trae 两个产品都支持** —— Trae CN 与 TRAE SOLO CN 一条命令互切，凭据独立、目录分存
+- **👁️ 隐藏渠道** —— 停用的模型不可见、不参与签到，凭据保留，随时能开回来
 
 ## 支持哪些渠道
 
@@ -100,29 +123,37 @@ DSH 宿主点外部链接会把面板顶掉。
 
 - **自动签到**（默认开）
 - **隐藏 / 停用渠道** —— 停用的模型不可见、不参与签到，凭据保留
-- **模型勾选** —— 渠道行点「模型 N」，勾上即出现，**改完立刻生效**
+- **模型勾选** —— 渠道行点「已选 X / 共 N」，勾上即出现，**改完立刻生效**
 - **推理档位检测** —— 对上游没声明档位的模型一键实测（消耗少量额度，结果缓存）
 - **侧栏入口开关**
 
-## 档位：两条路径，一个结果
+## 思考档位：声明与实测取并集
 
-各模型可用的思考档位来自两处，**取并集**：
+各模型可用的档位来自两处，**取并集**（谁也不压谁）：
 
-1. **上游声明**（自动）—— 目录声明了哪些就显示哪些
-2. **档位探查**（手动点）—— 没声明的模型点「检测」实测
+1. **上游声明**（自动）—— 目录声明了哪些就显示哪些，是保底
+2. **档位探查**（手动点）—— 没声明的模型点「检测」实测出来，是扩展
 
-探查用**哨兵拒绝法**，三步顺序有意义：**基线**（证明凭据/请求形状可用）→
-**哨兵**（随机值，回答"上游到底校不校验这个字段"）→ **逐档扫描**（只在确证会校验后才做）。
+探查用**哨兵拒绝法**，三步顺序有意义，不是优化：
+**基线**（证明凭据/请求形状本身可用，否则后续拒绝无法归因）→
+**哨兵**（随机值，回答"上游到底校不校验这个字段"）→
+**逐档扫描**（只在确证"会拒绝"之后才做）。
+
 所以它不会把"传什么都收"误判成"支持所有档位"，也不会白烧额度 ——
 实测 `qfmodel` 只用 2 个请求就得出「不校验」的结论，没有继续扫。
 
-各家情况不同（实测，别按渠道名想当然）：
+各家情况不同（**都是实测，别按渠道名想当然**）：
 
-| 渠道 | 档位来源 | 需要手动检测吗 |
+| 渠道 | 档位的真值来源 | 需要手动检测吗 |
 |---|---|---|
 | **Trae** | 目录按 (模型 × function) **精确声明** | 不需要 |
 | **WorkBuddy** | 一部分有声明，其余需实测 | 需要 |
-| **Qoder** | 部分声明 + 探查兜底 | 需要 |
+| **Qoder** | `thinking_config` 部分声明 + 探查兜底 | 需要 |
+
+⚠️ 一个反复踩到的坑：**「是否支持档位」不能看「是否专用思考模型」**。
+Qoder 的 `dfmodel`（DeepSeek-Flash）标 `is_reasoning: false` 却声明了 3 个档位 ——
+那个布尔说的是"是否**专用**思考模型"，不是"能否调档"。
+真正的档位声明在 `thinking_config.enabled.efforts` 里，**逐模型不同**。
 
 ## 目录与凭据怎么更新
 
@@ -149,8 +180,8 @@ Trae 之所以特殊：凭据在客户端的加密存储里，且目录接口要
 
 ## 质量
 
-自带 **19 个确定性验证脚本（257 项断言）**，不依赖网络、任何机器都能跑，当前**全绿**；
-另有 12 个活体脚本做真实请求单点实测。每条探针都对应一个真实修过的 bug，
+自带 **20 个确定性验证脚本（257 项断言）**，不依赖网络、任何机器都能跑，当前**全绿**；
+另有 2 个活体脚本做真实请求单点实测。每条探针都对应一个真实修过的 bug，
 **且都做过反向验证**（把修复删掉，探针必须变红）：
 
 ```bash
@@ -158,11 +189,12 @@ node probes/verify-trae-products.mjs                 # Trae 双产品变体（40
 node probes/verify-probe-service.mjs                 # 哨兵探查服务（25）
 node probes/verify-trae-effort-chain.mjs             # Trae 档位链路离线验证（22）
 node probes/verify-qoder-effort-source.mjs           # Qoder 档位来源合并（21）
+node probes/verify-effort-refresh.mjs                # 更新模型的档位差异 + 默认档 + 兜底名单（17）
 node probes/verify-trae-tool-calling.mjs             # Trae 工具调用全链路（19）
 node probes/verify-trae-output-hygiene.mjs           # Trae 输出净化 / 断流可见性 / parser 交接（17）
 node probes/verify-probe-contract.mjs                # 探查契约与 onProbed 接线（17）
-node probes/verify-qoder-auth-retry.mjs              # Qoder 凭据重试（11）
-node probes/verify-trae-parser-handoff.mjs           # SSE 残片与收尾（11）
+node probes/verify-qoder-auth-retry.mjs             # Qoder 凭据重试（11）
+node probes/verify-trae-parser-handoff.mjs          # SSE 残片与收尾（11）
 node probes/verify-qoder-stream-fixes.mjs            # Qoder 首事件批 / 返回形状 / 取消接线（9）
 node probes/verify-workbuddy-tool-pairing.mjs        # 工具破损修复（9）
 node probes/verify-attachment-wiring.mjs             # 三家附件接线（9）
@@ -170,9 +202,9 @@ node probes/verify-channel-disable-memory.mjs        # 禁用/启用渠道不丢
 node probes/verify-probe-account-wiring.mjs          # 探查账号接线（8）
 node probes/verify-qoder-error-classification.mjs    # 额度错误不再冒充"API 密钥无效"（8）
 node probes/verify-provider-config-schema.mjs        # provider 配置 schema（7）
-node probes/verify-schemastery-field-shapes.mjs      # 宿主 schema 调用形状（7）
-node probes/verify-shim-cancel-wiring.mjs            # Qoder 499 取消根因回归（5）
-node probes/verify-workbuddy-reasoning-levels.mjs    # 档位映射（off 恒为 null）（4）
+node probes/verify-schemastery-field-shapes.mjs        # 宿主 schema 调用形状（7）
+node probes/verify-shim-cancel-wiring.mjs              # Qoder 499 取消根因回归（5）
+node probes/verify-workbuddy-reasoning-levels.mjs       # 档位映射（off 恒为 null）（4）
 ```
 
 探针纪律：断言拿**真实宿主 peer 包**跑，契约错误不能被沙箱 stub 吞掉；断言**值**而非键名；异步用例 await 且串行（共享全局 `fetch` 的用例并发会互相串味）；接线类修复走完整链路端到端测 —— 单组件单测是"永远绿"的。
@@ -182,9 +214,10 @@ node probes/verify-workbuddy-reasoning-levels.mjs    # 档位映射（off 恒为
 ```
 lib/providers/{workbuddy,trae,qoder}/   三渠道（各自注册 provider + 回环 shim + 路由）
 lib/shared/probe.js                     渠道无关的档位探查（哨兵拒绝法）
+lib/shared/catalog-diff.js              「更新模型」的模型 + 档位差异计算
 lib/panel.js · lib/client.js            统一面板：状态 / 签到 / 设置 / 模型勾选
 scripts/                                Trae 凭据导出 · WorkBuddy 登录链接 · Trae 解密
-probes/                                 31 个脚本：19 确定性 + 12 活体
+probes/                                 22 个脚本：20 确定性 + 2 活体
 docs/                                   目录字段手册 · Trae 双产品接入 · 档位协议实证
 ```
 

@@ -17,6 +17,8 @@ models.json
 connect-auth/
 
 # 依赖与产物
+probes/.effort-stubs/
+probes/.qstream-stubs/
 node_modules/
 *.log
 *.patch
