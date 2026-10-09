@@ -17,9 +17,13 @@
 //     shim 写 200 → `Readable.fromWeb(undefined)` 抛错 → 用户看到一个空的 200，
 //     而且 invalidate + 重试**都不会发生**。
 //
-//  C. **取消接线注册得太晚**
-//     `req.on("close")` 若在 `readBody` 之后注册，客户端在流式阶段断开的监听器
-//     不触发，上游请求不被 abort（Qoder 继续生成并计费）。
+//  C. **取消接线挂错了事件（req 'close' 而非 res 'close'）**
+//     `req` 的 'close' 在请求体读完时就触发（Node ≥16 语义=消息完成），
+//     挂 `req.on("close", () => abort())` 会让**每个正常请求**都立刻 abort
+//     → shim 回 499「客户端已取消」，Qoder 渠道整轮对话全部失败；
+//     注册到 readBody 之后又永远不触发（流式取消不 abort 上游）。
+//     正确判据是 `res` 的 'close' + `writableEnded`（见 shared/http.js 的
+//     abortOnClientDisconnect），三家 shim 共用。
 //
 // 以及 D：`parser.end()` 曾是死代码（只有 Trae 调用），最后一个无尾随空行的
 // 事件仍会丢。
@@ -168,15 +172,14 @@ ok("B2: 调用方的三分支语义成立（模拟网络失败不会变成 ok:tr
   // 也就是说：裸形状会掉到 `return {ok:true, response:outcome.response}` → 假成功
 });
 
-// ============ C. 取消接线在 readBody 之前 ============
+// ============ C. 取消接线挂在 res 上（不是 req 上） ============
 
-ok("C1: `req.on(\"close\")` 注册在 `readBody` 之前", () => {
-  const closeAt = stripped.indexOf('req.on("close"');
-  const readAt = stripped.indexOf("await readBody(req)");
-  if (closeAt === -1) throw new Error("没有注册 close 监听");
-  if (readAt === -1) throw new Error("找不到 readBody 调用");
-  if (closeAt > readAt) {
-    throw new Error("close 监听注册在 readBody 之后 —— 流式阶段取消不会 abort 上游（继续计费）");
+ok("C1: 用 abortOnClientDisconnect(res, controller)，不再 req.on(\"close\")", () => {
+  if (/req\.on\("close"/.test(stripped)) {
+    throw new Error("仍在用 req.on(\"close\") —— 它在请求体读完时就触发，每个正常请求都会被 abort 成 499");
+  }
+  if (!/abortOnClientDisconnect\(res,\s*controller\)/.test(stripped)) {
+    throw new Error("没有调用 abortOnClientDisconnect(res, controller)");
   }
 });
 
