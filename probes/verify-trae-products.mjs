@@ -183,7 +183,10 @@ ok('function 原样透传', sent[0]?.body?.function === 'solo_agent');
 console.log('\n[7] 真实快照（宿主导出后才有；没装 Trae 的机器自动跳过）');
 okIf('CN 快照判成 cn', cnCred?.product === 'cn', cnCred !== undefined, cnCred ? `label=${resolveProduct({}, cnCred).label}` : '');
 okIf('CN 快照的 reqSource=1 且 buildId 与变体表一致', cnCred?.reqSource === 1 && cnCred?.appVersionCode === TRAE_PRODUCTS.cn.appVersionCode, cnCred !== undefined);
-okIf('CN 目录读到 22 个模型（不是 SOLO 的 26）', cnCatalog?.models?.length === 22, cnCatalog !== undefined, `n=${cnCatalog?.models?.length}`);
+// 不写死模型总数：上游随时加模型（22 → 24 就是这么来的），写死只会在每次
+// 厂商更新后误红。这里钉的是"CN 快照确实加载出了非空、形状正确的目录"；
+// CN/SOLO 分文件由上一条 product === 'cn' 保证。
+okIf('CN 目录加载出非空模型列表', Array.isArray(cnCatalog?.models) && cnCatalog.models.length > 0 && cnCatalog.models.every((m) => typeof m.id === 'string' && m.id.length > 0), cnCatalog !== undefined, `n=${cnCatalog?.models?.length}`);
 okIf('目录里的中文 display_name 没乱码', (cnCatalog?.models ?? []).every((m) => !m.name.includes('\uFFFD')), cnCatalog !== undefined);
 okIf('maxTokens 不越过任一分组 dev 窗口（越界=静默开 Max、5× 计费）', (cnCatalog?.models ?? []).every((m) => {
   const devs = Object.values(m.contextWindowByGroup ?? {}).map((t) => t?.dev).filter((n) => Number.isFinite(n) && n > 0);
