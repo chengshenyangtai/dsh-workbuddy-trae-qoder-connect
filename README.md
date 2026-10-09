@@ -72,45 +72,27 @@ https://github.com/chengshenyangtai/dsh-workbuddy-trae-qoder-connect
 
 装完**重启一次 DSH**，再配凭据。
 
-## 让 AI 帮你一键启动
+## 让 AI 帮你启动
 
-**把下面整段复制给你的 AI 助手**，它会按顺序把三个渠道都跑起来（每一步都有现成脚本，
-不需要你记命令）：
+复制这段给 AI：
 
-````text
-请帮我配置 dsh-workbuddy-trae-qoder-connect 插件的三个渠道凭据，按顺序执行：
+```text
+跑 scripts/ 下的脚本配好 dsh-workbuddy-trae-qoder-connect 三个渠道的凭据，
+WorkBuddy 登录要轮询到成功为止。完成后汇报各渠道状态与模型数，提醒我重启 DSH。
+```
 
-1) Trae：本机已装 Trae 桌面版并登录过，请运行
-   node scripts/export-trae-plain.mjs
-   然后确认输出里显示导出了哪个产品（Trae CN / TRAE SOLO CN）和多少个模型。
-
-2) WorkBuddy：请运行
-   node scripts/workbuddy-login.mjs workbuddy1 --url-only
-   把打印出来的授权链接发给我，我会在浏览器里扫码/短信登录。
-   登录完成后凭据由插件自动写入，你不需要做别的。
-   （如果要加第二个账号，把 workbuddy1 换成 workbuddy2，重复这一步。）
-
-3) Qoder：请向我要一个 pt- 开头的官方 PAT（在
-   https://qoder.com.cn/account/integrations 生成），
-   然后写到 $DSH_HOME/qoder/pat。我也可以改用 Qoder 桌面 App 的登录态，
-   如果你发现本机已登录，优先用那个，不必问我要 PAT。
-
-4) 全部完成后，请 GET http://127.0.0.1:<DSH_PORT>/plugins/dsh-connect/status
-   把每个渠道的登录状态、模型数量、剩余额度汇报给我。
-   如果有渠道报未登录，告诉我卡在哪一步。
-
-5) 最后提醒我重启一次 DSH 让插件加载。
-````
-
-## 自己动手（不想用 AI）
-
-| 渠道 | 命令 / 操作 |
+| 渠道 | 跑什么 |
 |---|---|
-| **WorkBuddy** | `node scripts/workbuddy-login.mjs workbuddy1` —— 拿到授权链接，浏览器打开扫码/短信登录；不带 `--url-only` 会一直轮询到登录成功 |
-| **Qoder** | 到 <https://qoder.com.cn/account/integrations> 生成 `pt-…`，存为 `$DSH_HOME/qoder/pat`；或让插件直接用桌面 App 的登录态 |
-| **Trae** | 装 Trae 桌面版并登录一次 → `node scripts/export-trae-plain.mjs` |
+| **Trae** | `node scripts/export-trae-plain.mjs`（`--app cn\|solo` 选产品，`--list` 看登录态） |
+| **WorkBuddy** | `node scripts/workbuddy-login.mjs workbuddy1`（加账号换成 `workbuddy2` / `workbuddy3`…） |
+| **Qoder** | 用桌面 App 登录态；没有才要 PAT，写到 `$DSH_HOME/qoder/pat` |
 
-> 面板内**不提供扫码入口**：DSH 宿主里点击外部链接会把面板顶掉，所以授权一律走上面的命令行脚本。
+WorkBuddy 登录要点：**必须轮询到成功**。授权链接只是入口，凭据在 `login/poll` 拿到
+`ready` 时才落盘；`state` 是进程内存（TTL 15 分钟），拿完链接就退出 = 这场授权作废。
+所以要么跑不带 `--url-only` 的版本，要么取链接后持续轮询。
+
+新增的渠道槽位（如 `workbuddy3`）重启 DSH 后才会装载；面板内不放扫码入口，因为
+DSH 宿主点外部链接会把面板顶掉。
 
 ## 面板能做什么
 
