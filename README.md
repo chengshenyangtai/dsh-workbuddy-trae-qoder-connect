@@ -1,5 +1,7 @@
 # dsh-workbuddy-trae-qoder-connect
 
+![三家订阅，一个模型下拉](assets/social-preview.png)
+
 **一个插件，把你三家 AI 订阅的模型全部接进 DeepSeek Harness。**
 WorkBuddy（个人版多账号 / 企业版）· Qoder CN · Trae CN（IDE 版 / TRAE SOLO CN），
 共用一个模型下拉、一套对话历史、一个状态面板 —— 换模型不用换插件、不用重开会话。
