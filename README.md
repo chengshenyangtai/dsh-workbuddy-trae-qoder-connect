@@ -1,32 +1,54 @@
 # dsh-workbuddy-trae-qoder-connect
 
-![三家订阅，一个模型下拉](assets/social-preview.png)
+![三家免费额度，一个模型下拉](assets/social-preview.png)
 
-**你已经付了三家 AI 订阅的钱。为什么还要在三个窗口、三个插件、三套历史之间来回切？**
+**三家平台都在发免费额度与每日签到积分。别再开三个窗口、装三个插件、维护三套历史了。**
 
-这一个插件，把 **WorkBuddy（个人版多账号 / 企业版）· Qoder CN · Trae CN（IDE 版 / TRAE SOLO CN）**
-全部接进 DeepSeek Harness —— 一个模型下拉、一套对话历史、一个状态面板。
-**对话中途换渠道换模型，历史不丢。**
+这一个插件把 **WorkBuddy（个人版多账号 / 企业版）· Qoder CN · Trae CN（IDE 版 / TRAE SOLO CN）**
+的免费额度**聚合成一个入口** —— 一个模型下拉、一套对话历史、一个状态面板。
+**打开面板自动签到把额度续上**，然后在一个列表里选模型、调思考档位、让 Agent 真正干活。
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> **English** — One DSH plugin that aggregates WorkBuddy (multi-account + enterprise),
-> Qoder CN and Trae CN / TRAE SOLO CN into a single model picker with one shared
-> conversation history. Switch channels mid-conversation without losing context,
-> with live credit multipliers, per-model reasoning effort, daily check-in and image input.
+> **English** — All three platforms hand out free quota and daily check-in credits.
+> This one DSH plugin pools them into a single model picker with one shared
+> conversation history. It claims the daily check-in for you on open, then lets you
+> pick a model, set the reasoning effort, and let the agent actually do the work —
+> with live credit multipliers and image input.
+
+---
+
+## 这个根
+
+这个插件只有一条根：**把三家平台正在发的免费额度，聚合成一个能真正用起来的入口。**
+
+我们每一次 commit —— 更新目录、优化链路、修复 499 / 工具破损 / 额度误判 ——
+都是围着这条根长的，没有一个是"为了改而改"：
+
+| 根的需要 | 对应的活 |
+|---|---|
+| 免费额度要用得上 | 三渠道 provider + 回环 shim，把三种私有协议翻成 OpenAI 方言 |
+| 额度得一直有 | **自动签到**（幂等）+ 额度/倍率实时刷新 |
+| 用好每个模型 | **逐模型思考档位**（声明 ∪ 实测）+ 百万上下文 |
+| 不只是聊天 | **Agent 工具调用**（读文件 / 跑命令 / 改代码） |
+| 别让人费劲 | **AI 一键认证工作流** + 面板增删改名 + 模型勾选即时生效 |
 
 ---
 
 ## 你为什么想要它
 
-同类的渠道插件基本都是**单渠道**：接 WorkBuddy 的、接 Trae 的、接 Qoder 的各一个包。
-于是你装三份、开三个面板、维护三套凭据 —— 而它们本该是同一个东西。
+三家平台都在发免费额度与每日签到积分 —— 但**额度散在三个客户端里**：
+WorkBuddy 一个、Qoder 一个、Trae 一个（Trae 还分 CN 与 SOLO 两套）。
+要在它们之间切换，你得装三个插件、开三个面板、维护三套凭据，
+而且**一换渠道，对话历史就断了**。
+
+同类插件基本都是**单渠道**的，各管各的，于是这个"散"就没人解决。
 
 | | 单渠道插件 ×3 | **本插件** |
 |---|---|---|
+| 免费额度 | 三处，分别看 | **聚合**，一处看全部 |
 | 模型下拉 | 三块，各管各的 | **一个列表**，按渠道分组 |
 | 换模型 | 换插件 / 重开会话 | **对话中途直接换**，历史不丢 |
-| 看状态 | 三个面板分别看 | 一个渠道中心看全部 |
 | 每日签到 | 点三次 | **一次全领**（幂等） |
 | 装几个包 | 三个 | **一个** |
 
@@ -35,10 +57,17 @@
 
 ## 核心能力
 
-### 聚合
+### 免费聚合（这条根）
 
-- **🔀 三家订阅，一个列表** —— 汇成单个模型下拉，按渠道分组，每个模型旁标注**积分倍率**，贵不贵一眼可见
+- **🎁 三家免费额度，一个入口** —— WorkBuddy / Qoder / Trae 各自在送的免费额度，聚成一个模型下拉，按渠道分组
+- **📅 打开面板自动签到** —— 各渠道每日积分**一次领完**，幂等（重复领无害），可关
+- **📊 额度余量实时可见** —— 每个渠道的剩余额度、按套餐拆分、周期重置时间，面板里直接看
+- **💰 倍率标在模型旁** —— 每个模型旁标注**积分倍率**，哪个贵一眼可见，省着点用
+
+### 用模型
+
 - **🔁 会话内换模型** —— 中途从 WorkBuddy 换到 Qoder 再换到 Trae，历史不丢
+- **🧠 逐模型思考档位** —— 按每个模型**真实声明**的档位给选项（轻/中/高/极高），不是一刀切
 - **➕ 渠道增删改名** —— 注册表里加槽位、就地改名、删除（凭据文件一并清理）
 - **🎛️ 模型只留常用的** —— 渠道行点「已选 X / 共 N」勾选，改完立刻生效、不用重启
 
@@ -65,11 +94,11 @@
 
 ## 支持哪些渠道
 
-| 渠道 | 能接入什么 | 登录方式 |
-|---|---|---|
-| **WorkBuddy** | 个人版多账号（槽位数不限）+ 企业版 | AI 工作流 / 脚本生成登录链接，浏览器点开登录 |
-| **Qoder CN** | 官方 PAT，或直接用桌面 App 的登录态 | 二选一 |
-| **Trae CN / TRAE SOLO CN** | 两个产品各自的全部模型 | 本机客户端凭据导出 |
+| 渠道 | 能接入什么 | 免费额度怎么来 | 登录方式 |
+|---|---|---|---|
+| **WorkBuddy** | 个人版多账号（槽位数不限）+ 企业版 | 每日签到领积分 | AI 工作流 / 脚本生成登录链接，浏览器点开登录 |
+| **Qoder CN** | 订阅账号下的全部模型 | 每日签到活动 | 官方 PAT，或直接用桌面 App 的登录态（二选一） |
+| **Trae CN / TRAE SOLO CN** | 两个产品各自的全部模型 | 每日签到领积分 | 本机客户端凭据导出 |
 
 **Trae CN 模型最全**，独占 `glm-5.3-flash` / `glm-5.3-flashx` / `kimi-k2.8-preview` / `qwen3.8-flash` 等；
 TRAE SOLO CN 有自己的 8 个（`glm-5` / `kimi-k2.5` / `qwen-3.5` / 非正式版 `DeepSeek-V4` 等）。
@@ -155,21 +184,29 @@ Qoder 的 `dfmodel`（DeepSeek-Flash）标 `is_reasoning: false` 却声明了 3 
 那个布尔说的是"是否**专用**思考模型"，不是"能否调档"。
 真正的档位声明在 `thinking_config.enabled.efforts` 里，**逐模型不同**。
 
-## 目录与凭据怎么更新
+## 目录、额度与签到怎么更新
 
-| 渠道 | 模型目录 | 凭据 |
-|---|---|---|
-| **Qoder** | **实时从上游拉取** | PAT 或 App 会话，自动刷新 |
-| **WorkBuddy** | **实时从上游拉取** | 登录链接写入，30 秒巡检 |
-| **Trae** | **本机快照**：脚本从客户端解密导出 | 同左（重跑导出即换产品/续期） |
+三家刷新的东西各不相同，但**"更新模型"一个按钮全带走**（Qoder / WorkBuddy 实时拉上游，
+Trae 现场跑导出脚本后再重读快照）：
+
+| 渠道 | 模型目录 | 额度余量 | 每日签到 |
+|---|---|---|---|
+| **Qoder** | 实时拉上游 | 实时（`quota`） | 自动领（真实 claim 端点） |
+| **WorkBuddy** | 实时拉上游 | 实时（`credits`，按套餐求和） | 自动领（需额外探一次看板） |
+| **Trae** | 本机快照（脚本导出） | 实时（`credits.remain/total`） | 自动领（状态文档自带） |
 
 Trae 之所以特殊：凭据在客户端的加密存储里，且目录接口要三个特定请求头才回全量数据
 （少一个会**静默降级**成不含 function 配置的空壳）。所以走"导出一次 → 本地读"，
 重跑一次脚本就刷新；其余两家都是直接取上游。
 
+⚠️ 签到的判据：**「自动签到那一趟的 POST 返回」才是唯一可靠来源**。
+WorkBuddy 的签到看板在活动未开放时整份都是默认值，据此断言"今天没签"会误判；
+而 `10001 / 已签` 与 `claimed / 刚领到` 是可信的。这也是为什么
+"打开面板自动签到"同时是**签到状态的来源**，不是一个装饰。
+
 ## 边界（诚实说明）
 
-- **Trae 国际版（trae.ai）未实现** —— 需要另一套网关与订阅状态接口
+- **Trae 国际版（trae.ai）未实现** —— 它走的是另一套网关与订阅/额度状态接口，本插件的三个 provider 都不覆盖
 - **面板内不能点外部链接**（DSH 宿主会把面板顶掉）—— WorkBuddy 授权链接请复制到浏览器，或走命令行脚本
 - **插件代码改动需重启 DSH** —— 只有凭据/产品切换是 30 秒内热生效
 - **宿主升级后留意版本门禁** —— `peerDependencies` 需覆盖宿主的 `@deepseek-ai/dsh-*` 版本，否则插件会被整拒（表现为插件从管理页消失）。设置页插槽新旧两代（`settings.plugin.item` / 0.2+ 的 `settings.plugins.tab`）都注册了，宿主换代自动择路
