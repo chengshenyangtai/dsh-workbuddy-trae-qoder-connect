@@ -34,9 +34,11 @@ check("probe 段含 candidates（前端据此判断按钮是否显示）",
 check("probe 段含 running（前端据此显示进度）", /running: deps\.probe\.service\.isRunning\(\)/.test(qoderSrc), true);
 check("probe 段含 results（前端据此显示已探结果）", /results: models\.flatMap/.test(qoderSrc), true);
 
-// 前端确实读这些字段（从 client.js 里的实际引用确认）
-check("前端读 probe.candidates", /probe\?\.candidates\.includes\(model\)/.test(clientSrc), true);
-check("前端读 probe.running", /probe\?\.running === true/.test(clientSrc), true);
+// 前端确实读这些字段（从 client.js 里的实际引用确认）。
+// composer 旁边的单模型探查徽标已移除；这些字段现在由设置卡片里的
+// ProbeSection（"推理档位检测"区）读取 —— 形状不变，只是换了消费方。
+check("前端读 probe.candidates", /probe\.candidates\.includes\(/.test(clientSrc), true);
+check("前端读 probe.running", /probe\.running/.test(clientSrc), true);
 check("前端读 status.probeKey", /status\.probeKey/.test(clientSrc), true);
 check("前端读 result.probedAt（毫秒时间戳）", /formatTime\(result\.probedAt\)/.test(clientSrc), true);
 
