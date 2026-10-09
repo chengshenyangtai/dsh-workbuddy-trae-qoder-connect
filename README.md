@@ -2,19 +2,19 @@
 
 ![三家免费额度，一个模型下拉](assets/social-preview.png)
 
-**三家平台都在发免费额度与每日签到积分。别再开三个窗口、装三个插件、维护三套历史了。**
+**三家平台都在发免费额度和每日签到积分。别再开三个窗口、装三个插件、维护三套历史了。**
 
 这一个插件把 **WorkBuddy（个人版多账号 / 企业版）· Qoder CN · Trae CN（IDE 版 / TRAE SOLO CN）**
 的免费额度**聚合成一个入口** —— 一个模型下拉、一套对话历史、一个状态面板。
-**打开面板自动签到把额度续上**，然后在一个列表里选模型、调思考档位、让 Agent 真正干活。
+**打开面板自动把当天的签到积分领了**，然后在一个列表里选模型、调思考档位、让 AI 真正动手干活。
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 > **English** — All three platforms hand out free quota and daily check-in credits.
-> This one DSH plugin pools them into a single model picker with one shared
-> conversation history. It claims the daily check-in for you on open, then lets you
-> pick a model, set the reasoning effort, and let the agent actually do the work —
-> with live credit multipliers and image input.
+> This one DSH plugin pools them into a single model picker with one shared conversation
+> history. It claims each day's check-in for you when the panel opens, then lets you pick a
+> model, set the reasoning effort, and let the agent actually do the work — with live credit
+> multipliers and image input.
 
 ---
 
@@ -22,13 +22,12 @@
 
 这个插件只有一条根：**把三家平台正在发的免费额度，聚合成一个能真正用起来的入口。**
 
-我们每一次 commit —— 更新目录、优化链路、修复 499 / 工具破损 / 额度误判 ——
-都是围着这条根长的，没有一个是"为了改而改"：
+我们每一次改动 —— 更新目录、优化链路、修复报错 —— 都是围着这条根长的，没有一个是"为了改而改"：
 
 | 根的需要 | 对应的活 |
 |---|---|
-| 免费额度要用得上 | 三渠道 provider + 回环 shim，把三种私有协议翻成 OpenAI 方言 |
-| 额度得一直有 | **自动签到**（幂等）+ 额度/倍率实时刷新 |
+| 免费额度要用得上 | 三渠道各自注册模型来源 + 本地中转，把三种私有协议翻成同一种格式 |
+| 额度得一直有 | **自动签到**（重复领不扣分、不报错）+ 额度/倍率实时刷新 |
 | 用好每个模型 | **逐模型思考档位**（声明 ∪ 实测）+ 百万上下文 |
 | 不只是聊天 | **Agent 工具调用**（读文件 / 跑命令 / 改代码） |
 | 别让人费劲 | **AI 一键认证工作流** + 面板增删改名 + 模型勾选即时生效 |
@@ -37,31 +36,31 @@
 
 ## 你为什么想要它
 
-三家平台都在发免费额度与每日签到积分 —— 但**额度散在三个客户端里**：
+三家平台都在发免费额度和签到积分 —— 但**额度散在三个客户端里**：
 WorkBuddy 一个、Qoder 一个、Trae 一个（Trae 还分 CN 与 SOLO 两套）。
-要在它们之间切换，你得装三个插件、开三个面板、维护三套凭据，
-而且**一换渠道，对话历史就断了**。
 
-同类插件基本都是**单渠道**的，各管各的，于是这个"散"就没人解决。
+要在它们之间切换，你得装三个插件、开三个面板、维护三套凭据，
+而且**一换渠道，对话历史就断了**。同类插件基本都是**单渠道**的，各管各的，
+于是这个"散"一直没人解决。
 
 | | 单渠道插件 ×3 | **本插件** |
 |---|---|---|
 | 免费额度 | 三处，分别看 | **聚合**，一处看全部 |
 | 模型下拉 | 三块，各管各的 | **一个列表**，按渠道分组 |
 | 换模型 | 换插件 / 重开会话 | **对话中途直接换**，历史不丢 |
-| 每日签到 | 点三次 | **一次全领**（幂等） |
+| 每日签到 | 点三次 | **一次全领**（重复领无害） |
 | 装几个包 | 三个 | **一个** |
 
-三家协议完全不同（OpenAI 方言 / 私有 agent 协议 / 带自定义编码的双层 SSE），
+三家协议完全不同（OpenAI 方言 / 私有 agent 协议 / 带自定义编码的流式响应），
 插件在中间当翻译 —— 对 DSH 和你来说，它们长得一样。
 
 ## 核心能力
 
 ### 免费聚合（这条根）
 
-- **🎁 三家免费额度，一个入口** —— WorkBuddy / Qoder / Trae 各自在送的免费额度，聚成一个模型下拉，按渠道分组
-- **📅 打开面板自动签到** —— 各渠道每日积分**一次领完**，幂等（重复领无害），可关
-- **📊 额度余量实时可见** —— 每个渠道的剩余额度、按套餐拆分、周期重置时间，面板里直接看
+- **🎁 三家免费额度，一个入口** —— WorkBuddy / Qoder / Trae 各自在送的额度，聚成一个模型下拉，按渠道分组
+- **📅 打开面板自动签到** —— 各渠道每日积分**一次领完**，重复打开也只领一次、不报错，可关
+- **📊 额度余量实时可见** —— 每个渠道剩多少、按套餐拆分、什么时候重置，面板里直接看
 - **💰 倍率标在模型旁** —— 每个模型旁标注**积分倍率**，哪个贵一眼可见，省着点用
 
 ### 用模型
@@ -69,25 +68,24 @@ WorkBuddy 一个、Qoder 一个、Trae 一个（Trae 还分 CN 与 SOLO 两套�
 - **🔁 会话内换模型** —— 中途从 WorkBuddy 换到 Qoder 再换到 Trae，历史不丢
 - **🧠 逐模型思考档位** —— 按每个模型**真实声明**的档位给选项（轻/中/高/极高），不是一刀切
 - **➕ 渠道增删改名** —— 注册表里加槽位、就地改名、删除（凭据文件一并清理）
-- **🎛️ 模型只留常用的** —— 渠道行点「已选 X / 共 N」勾选，改完立刻生效、不用重启
+- **🎛️ 模型只留常用的** —— 渠道行点「已选 X / 共 N」，去掉不用的，改完立刻生效、不用重启
 
 ### 思考强度（reasoning effort）
 
 - **🧠 逐模型的档位** —— 按每个模型**真实声明**的档位给选项（轻/中/高/极高），不是一刀切
-- **⚡ 跟目录一起刷新** —— 点「更新模型」时档位**连同模型目录一起重取**，上游加档/收档立即反映，并在气泡里告诉你「N 个模型的思考档位已更新」
-- **🎯 新会话用上游默认档** —— 未手动选档时，用该模型目录声明的默认档（如 `dmodel` 默认 `max`、`qmodel_38max` 默认 `medium`），而不是想当然的固定值
-- **🔬 没声明就实测** —— 上游不声明档位的模型（如 `glm-5.3`、`hy3`），一键**探查**实测出来，结果缓存
-- **🛡️ 不给必然报错的选项** —— `off` 一律不提供（实测两家上游都对它返回 400）；关思考走另一条已验证的路径（Qoder 用 id 后缀 `@nothink`）
+- **⚡ 跟目录一起刷新** —— 点「更新模型」时档位**连同模型目录一起重取**，上游加档/收档立即反映，气泡里告诉你「N 个模型的思考档位已更新」
+- **🎯 新会话用上游默认档** —— 没手动选档时，用这个模型目录里声明的默认档（比如 `dmodel` 默认最高档 `max`、`qmodel_38max` 默认 `medium`），而不是拍脑袋定一个
+- **🔬 没声明就实测** —— 上游不声明档位的模型（比如 `glm-5.3`、`hy3`），一键**探查**实测出来，结果缓存，下次不重复烧额度
+- **🛡️ 不给必然报错的选项** —— 「关思考」一律不提供（实测两家上游都直接返回 400）；要关思考走另一条已验证的路径（Qoder 用模型名后缀 `@nothink`）
 
 ### 干活
 
-- **🛠️ Agent 工具调用** —— 能真正"干活"而不只是聊天：读文件、跑命令、改代码。Trae 已端到端实测（真实上游返回结构化工具调用、参数分片正确拼接、`finish_reason` 正确改写）
+- **🛠️ Agent 工具调用** —— 能真正"干活"而不只是聊天：读文件、跑命令、改代码。Trae 已端到端实测（真实上游返回结构化工具调用、参数分片正确拼接、结束标记正确改写）
 - **🖼️ 读图** —— 接通 DSH 附件服务，按各模型的上游标注开放
 - **📏 百万级上下文** —— 主力模型普遍支持 1M 上下文，长会话不被 200k 截断
 
 ### 运维
 
-- **📅 打开面板自动签到** —— 各渠道每日积分一次领完，幂等，可关
 - **🔄 每个渠道独立「更新模型」** —— 重抓该渠道最新目录；Trae 会**现场跑导出脚本**从桌面端重新导出
 - **🧩 Trae 两个产品都支持** —— Trae CN 与 TRAE SOLO CN 一条命令互切，凭据独立、目录分存
 - **👁️ 隐藏渠道** —— 停用的模型不可见、不参与签到，凭据保留，随时能开回来
@@ -102,12 +100,12 @@ WorkBuddy 一个、Qoder 一个、Trae 一个（Trae 还分 CN 与 SOLO 两套�
 
 **Trae CN 模型最全**，独占 `glm-5.3-flash` / `glm-5.3-flashx` / `kimi-k2.8-preview` / `qwen3.8-flash` 等；
 TRAE SOLO CN 有自己的 8 个（`glm-5` / `kimi-k2.5` / `qwen-3.5` / 非正式版 `DeepSeek-V4` 等）。
-两个产品**协议同构**，同一套代码用一张变体表支持，**没有分叉代码**。
+两个产品**协议同构**，同一套代码用一张产品表支持，**没有分叉代码**。
 
 ```bash
 node scripts/export-trae-plain.mjs --app cn     # 接 Trae CN（IDE）
 node scripts/export-trae-plain.mjs --app solo   # 接 TRAE SOLO CN
-node scripts/export-trae-plain.mjs --list       # 看两个产品各自的登录态
+node scripts/export-trae-plain.mjs --list        # 看两个产品各自的登录态
 ```
 
 切换就是重跑一次导出，插件 30 秒内自动换线，**不用重启**。
@@ -140,7 +138,7 @@ WorkBuddy 登录要轮询到成功为止。完成后汇报各渠道状态与模�
 | **Qoder** | 用桌面 App 登录态；没有才要 PAT，写到 `$DSH_HOME/qoder/pat` |
 
 WorkBuddy 登录要点：**必须轮询到成功**。授权链接只是入口，凭据在 `login/poll` 拿到
-`ready` 时才落盘；`state` 是进程内存（TTL 15 分钟），拿完链接就退出 = 这场授权作废。
+`ready` 时才落盘；`state` 是进程内存（有效期 15 分钟），拿完链接就退出 = 这场授权作废。
 所以要么跑不带 `--url-only` 的版本，要么取链接后持续轮询。
 
 新增的渠道槽位（如 `workbuddy3`）重启 DSH 后才会装载；面板内不放扫码入口，因为
@@ -175,7 +173,7 @@ DSH 宿主点外部链接会把面板顶掉。
 
 | 渠道 | 档位的真值来源 | 需要手动检测吗 |
 |---|---|---|
-| **Trae** | 目录按 (模型 × function) **精确声明** | 不需要 |
+| **Trae** | 目录按 (模型 × 功能槽位) **精确声明** | 不需要 |
 | **WorkBuddy** | 一部分有声明，其余需实测 | 需要 |
 | **Qoder** | `thinking_config` 部分声明 + 探查兜底 | 需要 |
 
@@ -186,34 +184,47 @@ Qoder 的 `dfmodel`（DeepSeek-Flash）标 `is_reasoning: false` 却声明了 3 
 
 ## 目录、额度与签到怎么更新
 
-三家刷新的东西各不相同，但**"更新模型"一个按钮全带走**（Qoder / WorkBuddy 实时拉上游，
-Trae 现场跑导出脚本后再重读快照）：
+三家刷新的东西各不相同，但**「更新模型」一个按钮全带走**
+（Qoder / WorkBuddy 实时拉上游，Trae 现场跑导出脚本后再重读快照）：
 
 | 渠道 | 模型目录 | 额度余量 | 每日签到 |
 |---|---|---|---|
-| **Qoder** | 实时拉上游 | 实时（`quota`） | 自动领（真实 claim 端点） |
+| **Qoder** | 实时拉上游 | 实时（`quota`） | 自动领（真实领取接口） |
 | **WorkBuddy** | 实时拉上游 | 实时（`credits`，按套餐求和） | 自动领（需额外探一次看板） |
 | **Trae** | 本机快照（脚本导出） | 实时（`credits.remain/total`） | 自动领（状态文档自带） |
 
 Trae 之所以特殊：凭据在客户端的加密存储里，且目录接口要三个特定请求头才回全量数据
-（少一个会**静默降级**成不含 function 配置的空壳）。所以走"导出一次 → 本地读"，
+（少一个会**静默降级**成不含功能配置的空壳）。所以走「导出一次 → 本地读」，
 重跑一次脚本就刷新；其余两家都是直接取上游。
 
-⚠️ 签到的判据：**「自动签到那一趟的 POST 返回」才是唯一可靠来源**。
-WorkBuddy 的签到看板在活动未开放时整份都是默认值，据此断言"今天没签"会误判；
-而 `10001 / 已签` 与 `claimed / 刚领到` 是可信的。这也是为什么
-"打开面板自动签到"同时是**签到状态的来源**，不是一个装饰。
+⚠️ 签到的判据：**「自动签到那一趟的返回」才是唯一可靠来源**。
+WorkBuddy 的签到看板在活动未开放时整份都是默认值，据此断言「今天没签」会误判；
+而 `10001 / 已签` 与 `claimed / 刚领到` 是可信的。这也是为什么「打开面板自动签到」
+同时是**签到状态的来源**，不是一个装饰。
+
+## 我们这几轮真正修掉了什么
+
+这些不是"新增功能"，而是**把原本会坑你的地方补上了** —— 每一条都对应一次真实的故障：
+
+| 修掉的坑 | 现在的好处 |
+|---|---|
+| Qoder 每轮都报 `499 客户端已取消` | 正常对话不再无故中断（错把「请求体读完」当成「用户取消」） |
+| 档位探查一律答「无凭据」 | 有凭据就能测，不再白跑一趟 |
+| 跨渠道历史里的工具调用破损（空函数名 / 孤儿结果） | 换渠道续聊不会突然 400 或被拒答 |
+| 「额度超限」被误报成「API 密钥无效」 | 报错文案与真实原因对得上，不再瞎找 |
+| 流式响应被静默截断、残片丢失 | 长回复收得完整，不再缺头少尾 |
+| Trae 渠道**完全不能跑 Agent 回合** | Trae 现在能真正调用工具干活 |
+| 模型按钮只显示总数，看不出选了几个 | 按钮常显「已选 X / 共 N」，一眼明白 |
+| 改名时按钮文字被挤成竖排 | 按钮不再换行，文字横排正常显示 |
 
 ## 边界（诚实说明）
 
-- **Trae 国际版（trae.ai）未实现** —— 它走的是另一套网关与订阅/额度状态接口，本插件的三个 provider 都不覆盖
+- **Trae 国际版（trae.ai）未实现** —— 它走的是另一套网关与订阅/额度状态接口，本插件的三个渠道都不覆盖
 - **面板内不能点外部链接**（DSH 宿主会把面板顶掉）—— WorkBuddy 授权链接请复制到浏览器，或走命令行脚本
 - **插件代码改动需重启 DSH** —— 只有凭据/产品切换是 30 秒内热生效
-- **宿主升级后留意版本门禁** —— `peerDependencies` 需覆盖宿主的 `@deepseek-ai/dsh-*` 版本，否则插件会被整拒（表现为插件从管理页消失）。设置页插槽新旧两代（`settings.plugin.item` / 0.2+ 的 `settings.plugins.tab`）都注册了，宿主换代自动择路
 - **部分模型的档位需要你手点一次检测** —— 上游不声明就无法自动得知（会消耗少量额度）
 - 少数模型不是 1M 上下文（如 `kimi-k2.6`、`minimax-m2.7` 等较老的条目），以模型选择器里显示的为准
-- 倍率数据从上游注册表拉取，`functions` 数量多时上游响应会变慢，所以分批查询；单批失败只影响那批模型的倍率显示
-- **三个渠道不走插件级配置** —— `gateway`、`appId`、`pollIntervalMs` 之类的键一律用内置默认（它们是从上游收编时的遗留面，2026-10-08 已从 schema 撤下并写明缘由）。真正可调的只有本设置页里的项目；Qoder 的 PAT 另有环境变量通道（`QODERCN_PAT` 等）。
+- 倍率数据从上游注册表拉取，上游响应会变慢，所以分批查询；单批失败只影响那批模型的倍率显示
 
 ## 质量
 
@@ -222,26 +233,26 @@ WorkBuddy 的签到看板在活动未开放时整份都是默认值，据此断�
 **且都做过反向验证**（把修复删掉，探针必须变红）：
 
 ```bash
-node probes/verify-trae-products.mjs                 # Trae 双产品变体（40）
+node probes/verify-trae-products.mjs                 # Trae 双产品（40）
 node probes/verify-probe-service.mjs                 # 哨兵探查服务（25）
 node probes/verify-trae-effort-chain.mjs             # Trae 档位链路离线验证（22）
 node probes/verify-qoder-effort-source.mjs           # Qoder 档位来源合并（21）
-node probes/verify-effort-refresh.mjs                # 更新模型的档位差异 + 默认档 + 兜底名单（17）
 node probes/verify-trae-tool-calling.mjs             # Trae 工具调用全链路（19）
 node probes/verify-trae-output-hygiene.mjs           # Trae 输出净化 / 断流可见性 / parser 交接（17）
+node probes/verify-effort-refresh.mjs                # 更新模型的档位差异 + 默认档 + 兜底名单（17）
 node probes/verify-probe-contract.mjs                # 探查契约与 onProbed 接线（17）
 node probes/verify-qoder-auth-retry.mjs             # Qoder 凭据重试（11）
-node probes/verify-trae-parser-handoff.mjs          # SSE 残片与收尾（11）
+node probes/verify-trae-parser-handoff.mjs           # 流式残片与收尾（11）
 node probes/verify-qoder-stream-fixes.mjs            # Qoder 首事件批 / 返回形状 / 取消接线（9）
 node probes/verify-workbuddy-tool-pairing.mjs        # 工具破损修复（9）
 node probes/verify-attachment-wiring.mjs             # 三家附件接线（9）
-node probes/verify-channel-disable-memory.mjs        # 禁用/启用渠道不丢模型勾选（8）
+node probes/verify-channel-disable-memory.mjs         # 禁用/启用渠道不丢模型勾选（8）
 node probes/verify-probe-account-wiring.mjs          # 探查账号接线（8）
 node probes/verify-qoder-error-classification.mjs    # 额度错误不再冒充"API 密钥无效"（8）
-node probes/verify-provider-config-schema.mjs        # provider 配置 schema（7）
-node probes/verify-schemastery-field-shapes.mjs        # 宿主 schema 调用形状（7）
-node probes/verify-shim-cancel-wiring.mjs              # Qoder 499 取消根因回归（5）
-node probes/verify-workbuddy-reasoning-levels.mjs       # 档位映射（off 恒为 null）（4）
+node probes/verify-provider-config-schema.mjs        # 渠道配置 schema（7）
+node probes/verify-schemastery-field-shapes.mjs       # 宿主 schema 调用形状（7）
+node probes/verify-shim-cancel-wiring.mjs             # Qoder 499 取消根因回归（5）
+node probes/verify-workbuddy-reasoning-levels.mjs     # 档位映射（"关思考"恒为不提供）（4）
 ```
 
 探针纪律：断言拿**真实宿主 peer 包**跑，契约错误不能被沙箱 stub 吞掉；断言**值**而非键名；异步用例 await 且串行（共享全局 `fetch` 的用例并发会互相串味）；接线类修复走完整链路端到端测 —— 单组件单测是"永远绿"的。
@@ -249,7 +260,7 @@ node probes/verify-workbuddy-reasoning-levels.mjs       # 档位映射（off 恒
 ## 项目结构
 
 ```
-lib/providers/{workbuddy,trae,qoder}/   三渠道（各自注册 provider + 回环 shim + 路由）
+lib/providers/{workbuddy,trae,qoder}/   三渠道（各自注册模型来源 + 本地中转 + 路由）
 lib/shared/probe.js                     渠道无关的档位探查（哨兵拒绝法）
 lib/shared/catalog-diff.js              「更新模型」的模型 + 档位差异计算
 lib/panel.js · lib/client.js            统一面板：状态 / 签到 / 设置 / 模型勾选
