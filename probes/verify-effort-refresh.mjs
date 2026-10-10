@@ -227,18 +227,56 @@ if (buildChatBody !== undefined) {
   });
 }
 
-await ok("Trae shim：未选档 → 发目录 default_level 映射后的 wire 值", () => {
+await ok("Trae shim：未选档 → 发目录 default_level（已是线上拼写）", () => {
   const src = fs.readFileSync(join(base, "lib", "providers", "trae", "index.js"), "utf8");
-  // 反查表把目录 default_level（light/high/extra_high）映射成线上值再发 custom_model。
   assert.match(src, /default_level/);
-  assert.match(src, /LEVEL_TO_TRAE_EFFORT\.get\(effortCfg\.default_level\)/);
-  // effort 取值：用户选了→按选择；没选→defaultWire。
-  assert.match(src, /const effort = level !== undefined\s*\n\s*\? LEVEL_TO_TRAE_EFFORT\.get\(level\)\s*\n\s*: defaultWire;/);
-});
-await ok("Trae shim：显式选择仍然优先于默认档", () => {
-  const src = fs.readFileSync(join(base, "lib", "providers", "trae", "index.js"), "utf8");
+  // 用户选档时：pi-ai 发 pi-ai 键名（low/high/xhigh），shim 查表成线上值。
+  assert.match(src, /LEVEL_TO_TRAE_EFFORT\.get\(level\)/);
+  // effort 取值：用户选了→按选择；没选/映射不到→defaultWire。
+  assert.match(src, /\?\? defaultWire/);
   // level 只在请求带了非空 reasoning_effort 时非 undefined。
   assert.match(src, /request\.reasoning_effort !== ""/);
+});
+
+/**
+ * 2026-10-10 的真实回归：`default_level` 被二次映射。
+ *
+ * `LEVEL_TO_TRAE_EFFORT` 的**键是 pi-ai 档位**（low/high/xhigh），而快照里的
+ * `default_level` **本来就是 Trae 线上拼写**（light/high/extra_high）。
+ * 拿后者查前者，只有 `high` 因为两边同名才侥幸生效 —— 默认档为 `extra_high`
+ * 的 GLM-5.3 系 / Kimi-K2.8 / Kimi-K3 与 `light` 的模型全部丢掉默认档。
+ * 表现就是"档位都有了，但默认档不生效"。
+ */
+await ok("Trae：default_level 不得再过一次 LEVEL_TO_TRAE_EFFORT", () => {
+  const src = fs.readFileSync(join(base, "lib", "providers", "trae", "index.js"), "utf8");
+  assert.doesNotMatch(src, /LEVEL_TO_TRAE_EFFORT\.get\(effortCfg\.default_level\)/,
+    "default_level 被二次映射 —— extra_high/light 的默认档会静默丢失");
+  assert.match(src, /declaredOptions\.includes\(effortCfg\.default_level\)/,
+    "默认档没有对照 options 校验，可能发出上游不认的值");
+});
+
+await ok("Trae：默认档取值语义（按快照真值模拟）", () => {
+  const TRAE_EFFORT_TO_LEVEL = { light: "low", high: "high", extra_high: "xhigh" };
+  const LEVEL_TO_TRAE_EFFORT = new Map(Object.entries(TRAE_EFFORT_TO_LEVEL).map(([w, l]) => [l, w]));
+  const resolve = (cfg, requested) => {
+    const options = Array.isArray(cfg?.options) ? cfg.options : [];
+    const defaultWire = cfg?.support_thinking === true
+      && typeof cfg.default_level === "string"
+      && options.includes(cfg.default_level) ? cfg.default_level : undefined;
+    const level = typeof requested === "string" && requested !== "" ? requested : undefined;
+    return (level === undefined ? undefined : LEVEL_TO_TRAE_EFFORT.get(level)) ?? defaultWire;
+  };
+  // GLM-5.3@solo_agent：默认 extra_high（旧实现这里会给出 undefined）。
+  const glm = { support_thinking: true, options: ["light", "high", "extra_high"], default_level: "extra_high" };
+  assert.equal(resolve(glm, undefined), "extra_high", "未选档应发目录默认档 extra_high");
+  assert.equal(resolve(glm, "low"), "light", "用户选档优先");
+  assert.equal(resolve(glm, "xhigh"), "extra_high");
+  // light 默认同样不能丢。
+  assert.equal(resolve({ support_thinking: true, options: ["light", "high"], default_level: "light" }, undefined), "light");
+  // 默认档不在 options 里 → 不发（宁缺毋错）。
+  assert.equal(resolve({ support_thinking: true, options: ["high"], default_level: "extra_high" }, undefined), undefined);
+  // 不支持思考 → 一律不发。
+  assert.equal(resolve({ support_thinking: false, default_level: "high" }, undefined), undefined);
 });
 
 await ok("WorkBuddy shim：缺席 reasoning_effort 时补目录默认档", async () => {

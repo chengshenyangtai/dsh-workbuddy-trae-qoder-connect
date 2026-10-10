@@ -29,7 +29,7 @@ import { pathToFileURL } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.join(HERE, '..');
-const INSTALLED = path.join(os.homedir(), '.dsh', 'profiles', 'desktop', 'node_modules', 'dsh-connect');
+const INSTALLED = path.join(os.homedir(), '.dsh', 'profiles', 'desktop', 'node_modules', process.env.DSH_CONNECT_DIR ?? 'dsh-workbuddy-trae-qoder-connect');
 const USE_INSTALLED = process.argv.includes('--installed');
 const SRC_ROOT = USE_INSTALLED ? INSTALLED : REPO;
 const HOME = path.join(os.homedir(), '.dsh');
@@ -39,6 +39,8 @@ if (!fs.existsSync(SRC)) {
   console.error(`找不到 trae provider：${SRC}\n（用 --installed 可以改测已安装的那份）`);
   process.exit(2);
 }
+/** provider 源码文本：给"取值优先级"这类结构性断言用。 */
+const traeSrc = fs.readFileSync(SRC, 'utf8');
 
 // ── 沙箱：peer 依赖打桩，源码本体不动 ──────────────────────────────────────
 const SANDBOX = path.join(os.tmpdir(), 'dsh-trae-products-sandbox');
@@ -182,7 +184,23 @@ ok('function 原样透传', sent[0]?.body?.function === 'solo_agent');
 
 console.log('\n[7] 真实快照（宿主导出后才有；没装 Trae 的机器自动跳过）');
 okIf('CN 快照判成 cn', cnCred?.product === 'cn', cnCred !== undefined, cnCred ? `label=${resolveProduct({}, cnCred).label}` : '');
-okIf('CN 快照的 reqSource=1 且 buildId 与变体表一致', cnCred?.reqSource === 1 && cnCred?.appVersionCode === TRAE_PRODUCTS.cn.appVersionCode, cnCred !== undefined);
+okIf('CN 快照的 reqSource=1', cnCred?.reqSource === 1, cnCred !== undefined);
+/**
+ * buildId **不钉成"必须等于变体表"**（2026-10-10 修正）。
+ *
+ * 它和模型总数是同一类东西：厂商随时会变。本机 Trae 一升级，快照里的
+ * `appVersionCode` 就是新值，而运行时的取值优先级是
+ * `config() ?? doc.appVersionCode ?? product.appVersionCode` —— **快照的值本来就赢**，
+ * 表里那个只是"快照没带时"的兜底。钉相等等于把一次正常的厂商升级判成故障。
+ *
+ * 实测两个 buildId（旧 1232067209986 / 新 1238290756610）打倍率接口，
+ * 返回**逐字节相同**（815552 B、194 处 consumption_rate），所以新值不会降级成空壳。
+ *
+ * 真正该钉的是两件事：快照带了可用的 buildId，以及**优先级不能被写反**
+ * （反了就会拿旧值去查新值，静默回空壳 —— 表现是"倍率列全空"）。
+ */
+okIf('CN 快照带了可用 buildId', Number.isFinite(cnCred?.appVersionCode) && cnCred.appVersionCode > 0, cnCred !== undefined, `buildId=${cnCred?.appVersionCode}`);
+okIf('运行时优先取快照的 buildId（表值只作兜底）', /appVersionCode:\s*config\(\)\.appVersionCode \?\? doc\.appVersionCode \?\? product\.appVersionCode/.test(traeSrc), true);
 // 不写死模型总数：上游随时加模型（22 → 24 就是这么来的），写死只会在每次
 // 厂商更新后误红。这里钉的是"CN 快照确实加载出了非空、形状正确的目录"；
 // CN/SOLO 分文件由上一条 product === 'cn' 保证。
