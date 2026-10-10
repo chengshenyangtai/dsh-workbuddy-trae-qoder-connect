@@ -47,6 +47,24 @@ pi-ai 键空间 `off < minimal < low < medium < high < xhigh < max` 排序。
 ⚠️ 同一模型在 `solo_agent_lite` 有档位有 1M，在 `solo_work_lite` 可能全没有——
 导出脚本按组保留三张表，插件按**当前 function** 取。改了导出脚本必须重跑并重启 DSH。
 
+⚠️ **两个产品的槽位名不同**，核对前先确认当前产品，否则会拿 SOLO 的槽位名去查 CN 的快照，
+得出"这个模型没档位"的错误结论：
+
+| 产品 | 槽位名 |
+|---|---|
+| SOLO（`--app solo`，目录 `~/.dsh/trae/models.json`） | `solo_agent_lite` / `solo_agent_remote` / `solo_work_lite` / `solo_coder` … |
+| CN（`--app cn`，目录 `~/.dsh/trae-cn/models.json`） | `solo_agent` / `chat_v3` / `builder_v3` |
+
+**区分两种"没有档位"**（诊断"为什么这个模型没有档位"必看）：
+
+- `reasoning_effort_config` **整个字段缺失** → 上游没给这个信息，解析后是 `null`（如 `kimi-k2.6`、
+  `minimax-m2.7`、`qwen3.6-plus`）；
+- `{"support_thinking": false}` → 上游**明确说了不支持**（如 `mimo-v2.6-pro`、`seed-evolving`）。
+
+两种在 UI 上都表现为"无档位"，但含义不同：前者是"不知道"，后者是"确定不行"。
+**Trae 不能用探查扩展档位** —— 它静默忽略非法值（见 `TRAE-REASONING-EFFORT.md` F8），
+所以目录声明就是唯一权威，刷多少次都不会凭空出现。
+
 ## WorkBuddy
 
 官方声明直接可用（无需探查）。档位走 pi-ai 标准 `reasoning_effort`。
@@ -73,3 +91,10 @@ Trae 用 light/high/extra_high 映射）。`off` 在 Qoder/Trae 均不作为线�
 - 2026-10-06 Trae：deepseek-v4.1-flash@solo_agent_lite `{dev:200000,max:1000000}`；
   Max 请求表达 = `persist_meta.smart_selection.strategy:"max"` +
   `prompt_max_tokens=936000`（= 1M×93.6%）。`solo_work_lite` 无 max。
+- 2026-10-10 Trae CN（重跑导出后全量核对，24 个模型）：**15 个有档位 / 9 个没有**。
+  有档位的默认档逐模型不同 —— GLM-5.3 / GLM-5.3-Flash / GLM-5.3-FlashX / Kimi-K2.8-Preview /
+  Kimi-K3 默认 `extra_high`；DeepSeek-V4 系 / Qwen3.8 系 / GLM-5.2 / Seed 系 / Step-5 默认 `high`。
+  无档位中，`mimo-v2.6-pro`、`mimo-v2.6-flash`、`minimax-m3`、`qwen3.7-plus`、`seed-evolving`
+  是上游明确 `support_thinking:false`；`kimi-k2.6`、`kimi-k2.7-code`、`minimax-m2.7`、
+  `qwen3.6-plus` 是**没有 `reasoning_effort_config` 字段**（解析后 `null`）。
+  用户已在 Trae 客户端确认 MiMo 确实没有档位入口 —— **不是插件漏解析，刷新链路正常**。
