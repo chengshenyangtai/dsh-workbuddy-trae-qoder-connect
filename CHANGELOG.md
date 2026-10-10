@@ -4,6 +4,8 @@
 
 ## 2026-10
 
+- **Trae 默认思考档位只对 `high` 生效，其余模型全丢**（`dfb8fa5`）：回退默认档时把 `default_level` 又过了一次反查表 —— 那张表的键是 pi-ai 档位（`low/high/xhigh`），而快照里的 `default_level` 本来就是 Trae 线上拼写（`light/high/extra_high`）。只有 `high` 因为两边同名侥幸生效，默认档为 `extra_high` 的 GLM-5.3 系 / Kimi-K2.8 / Kimi-K3 与 `light` 的模型全部静默丢掉默认档。现在直接用线上拼写，并校验它确在该模型声明的 options 里（不在就不发）。用户手选的档位仍走反查表，那才是它该用的地方。
+  - 同一提交修了探针的一处误红：`verify-trae-products` 把快照 buildId 钉成「必须等于变体表」，而运行时优先级本就是 `配置 ?? 快照 ?? 表值` —— 厂商一升级就误判成故障。改为钉「快照带了可用 buildId」+「优先级没被写反」（实测新旧 buildId 打倍率接口返回逐字节相同，815552 B / 194 处倍率）。
 - **禁用渠道后模型还能选**（`50273f0`）：面板写着「已禁用」，模型照常可见。写入 `disabledChannels` 的是渠道 id（`qoder`），隐藏判定查的却是 provider id（`qoder1`），只在 Qoder 上不一致，静默失效。现在两种 id 都认，注册表读不到时判「没禁用」——宁可漏隐藏，不误隐藏。
 - **Qoder 每轮对话都报 `499 客户端已取消`**（`a0d8ed2`）：把「请求体读完」当成了「用户取消」。Node ≥16 里 `IncomingMessage` 的 `close` 在 body 读完就触发，不是断连信号；改挂到 `res` 上用 `writableEnded` 区分。Trae / WorkBuddy 的反向潜伏 bug（取消不中止上游、白烧额度）一并修掉。
 - **档位探查一律答「无凭据」**：有凭据却测不了，账号接线漏传。
