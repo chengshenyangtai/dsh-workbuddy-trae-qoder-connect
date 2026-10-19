@@ -4,6 +4,14 @@
 
 ## 2026-10
 
+- **Qoder 国际版（`*.qoder.sh`）从未被接通，且 PAT 路径在当前版本走不通**：Qoder 原先只有国区一个 provider，国际版是**另一套独立服务**（账号、额度、模型目录都不互通），插件里没有它的位置；同时 PAT 路径存在一个必现缺陷 —— `fetchUserInfo()` 用 `buildCosyHeaders()` 签名，而那个函数要求 `creds.userID` 非空，可 uid 恰恰是这一步要取的东西。空 uid 在本地直接抛 `cosy: userID 为空`，异常被 `catch` 吞掉后回落成空 uid，最终报成「userinfo 没有返回用户 id（PAT 可能已失效）」——**任何 PAT 都不可能成功**，而文案把锅甩给了 PAT。
+  - 国际版的域名不是猜的：`openapi.qoder.com` / `gateway.qoder.com` 实测 **NXDOMAIN**。真实端点在客户端缓存 `~/.qoder/.cache/endpoint-cache.json` 里 —— 推理 `api3.qoder.sh`、OpenAPI `openapi.qoder.sh`、端点发现 `center.qoder.sh`，由客户端从 center 动态拉取，会随服务端调度变化。所以新档案的默认值同时**读这份缓存**（v1 扁平字段与 v2 `endpointSets` 两种形状都认），读不到才回落常量。
+  - 协议层实测与国区**完全同构**，因此不需要第二份实现：同一把 COSY RSA 公钥、同一套 `aes-128-cbc + md5` 签名、同样的 `/algo` 前缀与 `Encode=1`、同样的 `dt-` 会话与 `auth.v1.dat`（DPAPI + AES-256-GCM）信封。`Cosy-Version` 1.1.38 与 1.1.69 拉到的目录逐字相同（17 个模型），不敏感。国际版**也有每日签到**（实测 `CLAIMED` / +100 credits），与 WorkBuddy 国际版不同。
+  - 修法：把 provider 里写死的单实例常量收成区域档案 `QODER_REGIONS`（端点、会话类型 `qoderclicn`/`qodercli`、provider id `qoder1`/`qoder2`、路由前缀、凭据与运行态文件名），`apply(ctx, { region })` 按档案装配；注册表放开 qoder 多实例（只认 `qoder` / `qoder-global` 两个 id），`channelOf()` 与新增的 `qoderRoutesOf()` **必须算出同一串**——面板按前者 fetch、provider 按后者挂路由，任一处漏改都会静默 404。
+  - **PAT 路径一并修好**：userinfo 属 OpenAPI 平面，本就不需要 COSY 签名（裸 `Bearer <jobToken>` 实测 200 且返回 `id`），改用 `openApiHeaders()`。拿到 uid 之后的目录/对话请求仍按原样带 COSY。
+  - 国区行为**逐字不变**：`QODER_STATUS_ROUTE` / `CHECKIN_ROUTE` / `PROBE_ROUTE` 三条对外常量一个字没动，provider id 仍是 `qoder1`（用户已选的模型不用重选），凭据与运行态文件名照旧 —— 老注册表（只有 `qoder` 一条、无 `region` 字段）升级后行为不动。
+  - 新增 `scripts/qoder-session-export.mjs`：双区域从桌面 App 缓存导出会话（DPAPI 解 os_crypt 密钥 + AES-256-GCM 解 `auth.v1.dat`，`--region cn|global`、`--check`）。发布包里缺的 `qoder-vault.mjs` 功能由它补齐 —— 会话到期时重跑一次即可，不用手工造文件。
+  - 新增两个探针：`probes/verify-qoder-global-routing.mjs`（28 项，两区档案/域名/provider id 互不相同、注册表派生 ≡ provider 注册、四条命名空间零重叠、国区常量不变）与 `probes/verify-qoder-cn-no-regression.mjs`（27 项，国区契约 + workbuddy/trae 派生未受牵连）。两者自带 `probes/_qoder-stubs/`（按纪律白名单式声明缺哪 6 个宿主包），**不依赖宿主真包，任何机器可跑**。反向验证各注入一次回归：改坏国区 `routePrefix` → 1 项变红；国际版 `sessionFile` 撞进国区 → 2 项变红，还原后均恢复全绿。
 - **国际版每条消息都被上游拦下：`400 code 11128 conversation id missing`**（用户报，用了好几天之后突然全灭）：WorkBuddy AI 5.7 起，国际版 `/v2/chat/completions` 对出站请求做**抽样渠道校验**，要求携带官方桌面客户端那套会话头（`X-Conversation-ID` / `-Request-ID` / `-Message-ID` / `X-Root-Request-ID`），缺一个被抽到的请求就直接 400，`displayTips` 写的是「这次调用没通过渠道校验，可能不是官方客户端发出的」。插件的 `chatHeaders` 一个都没带。
   - 不是插件自己的退化：同期所有第三方反代都在报同一条（workbuddy2api-hub 的 #380 / #383 / #388 / #392），上游侧的对策是把这四个头补齐（PR #381，已被仓库合并）。我们做同一件事。
   - 修法：`chatHeaders` 在国际版（`regionOf(domain) === "global"`）时多带这四个头。插件没有自己的会话（DSH 每条消息都是新会话），所以每个请求**现编一套 id**、不重放旧值 —— 上游关联的正是请求 id，复用才是它要抓的谎。四个 id 都由 `randomUUID()` 生成，互不相同。

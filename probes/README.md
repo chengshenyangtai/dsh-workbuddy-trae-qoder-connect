@@ -1,8 +1,12 @@
 # probes/ 验证脚本
 
-## 确定性脚本（26 个）
+## 确定性脚本（28 个）
 
 不依赖网络、不需要重启 DSH，任何机器 `node probes/verify-xxx.mjs` 就能跑；断言对象是**装着的那份插件**（`_installed.mjs` 按 profile 依赖键定位，包改名不会让整批探针变红）。输出统一是 `N 通过 / M 失败`，退出码即结果。加 `--installed` 则改测 profile 里跑着的那份。
+
+> ⚠️ 其中一部分探针要 import **宿主真包**（`@deepseek-ai/schemastery` 等，见 `probes/README.md` 的探针纪律）。桌面版把依赖打进 `app.asar` 后，`~/.dsh/profiles/desktop/node_modules/@deepseek-ai/` 可能是空的，这类探针会以
+> `找不到宿主真包 … —— 本探针需要装过 dsh 桌面版的机器` + **exit=2** 退出。这不是断言失败，是环境缺件。
+> 带 `_qoder-stubs/` 的两个探针（见下）不依赖宿主包，任何机器都能跑。
 
 ```bash
 node probes/verify-trae-products.mjs                 # Trae 产品变体（56）
@@ -31,6 +35,8 @@ node probes/verify-provider-config-schema.mjs        # 渠道配置 schema（7�
 node probes/verify-schemastery-field-shapes.mjs      # 宿主 schema 调用形状（7）
 node probes/verify-shim-cancel-wiring.mjs            # Qoder 499 取消根因回归（5）
 node probes/verify-workbuddy-reasoning-levels.mjs    # 档位映射（"关思考"恒为不提供）（4）
+node probes/verify-qoder-global-routing.mjs          # Qoder 双区域路由/凭据落点一致（28，自带 stub）
+node probes/verify-qoder-cn-no-regression.mjs        # 加国际版未改国区契约（27，自带 stub）
 ```
 
 ## 活体脚本（3 个）
