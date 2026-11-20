@@ -4,6 +4,8 @@
 
 - **WorkBuddy 国区 PTC 模式 11128**：指纹清洗在抹掉 `DeepSeek Harness` 之后仍被拦。二分定位到 PTC 系统提示里的 `workspace root` 短语（前缀 `workspace roo` 可通过，补 `t` 即 11128）。`stripHarnessFingerprint` 改为先把 `workspace root` → `project directory`；并深拷贝清洗 messages/tools、加固 `developer`→`system`，国区 `chatStream` 也走 `prepareInternationalChatBody`（不再原样透传）。
 - **Qoder PAT 首次 userinfo「没有返回用户 id」**：bootstrap 时尚无 uid，不能签 COSY；`fetchUserInfo` 在 uid 为空时改用裸 Bearer jobToken。
+- **Qoder 403 code 112 + pricingUrl**：识别为订阅/额度门禁（不是密钥失效），`describeUpstreamFailure` 直接提示开通 https://qoder.com.cn/pricing，避免无意义重试成「API 密钥无效」。
+
 
 修 bug 是欠账还清，不算卖点，所以单独记在这里。每条都能在 git log 里对上。
 
