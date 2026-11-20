@@ -1,5 +1,9 @@
 # 修复记录
 
+## 2026-11-20 (ftkey)
+
+- **WorkBuddy 国区 PTC 模式 11128**：指纹清洗在抹掉 `DeepSeek Harness` 之后仍被拦。二分定位到 PTC 系统提示里的 `workspace root` 短语（前缀 `workspace roo` 可通过，补 `t` 即 11128）。`stripHarnessFingerprint` 改为先把 `workspace root` → `project directory`；并深拷贝清洗 messages/tools、加固 `developer`→`system`，国区 `chatStream` 也走 `prepareInternationalChatBody`（不再原样透传）。
+
 修 bug 是欠账还清，不算卖点，所以单独记在这里。每条都能在 git log 里对上。
 
 ## 2026-10
